@@ -1,0 +1,71 @@
+spring:
+  application:
+    name: admin-service
+
+  cloud:
+    config:
+      uri: http://config-server:8888
+
+  jackson:
+    parser: {}   # removed "max-string-length"
+
+  data:
+    mongodb:
+      uri: ${SPRING_DATA_MONGODB_URI:mongodb://mongodb:27017/glowkart_admin}
+      database: ${SPRING_DATA_MONGODB_DATABASE:glowkart_admin}
+
+  mail:
+    host: ${SPRING_MAIL_HOST:smtp.gmail.com}
+    port: ${SPRING_MAIL_PORT:587}
+    username: ${SPRING_MAIL_USERNAME:itsmesai0427@gmail.com}
+    password: ${SPRING_MAIL_PASSWORD:exccsapctjcuagkd}
+    protocol: smtp
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          ssl:
+            enable: false
+        debug: false
+
+server:
+  port: 8082
+
+feign:
+  client:
+    config:
+      default:
+        connectTimeout: 5000
+        readTimeout: 5000
+        loggerLevel: full
+
+async:
+  core-pool-size: 5
+  max-pool-size: 20
+  queue-capacity: 50
+
+app:
+  token-expiry-minutes: ${APP_TOKEN_EXPIRY_MINUTES:60}
+
+notification:
+  default-from-email: ${NOTIFICATION_FROM_EMAIL:no-reply@glowkart.com}
+  clinic-login-url: ${CLINIC_LOGIN_URL:https://glowkartclinic.ashokfruit.shop/login}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE:http://eureka-server:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
+
+aws:
+  accessKeyId: ${AWS_ACCESS_KEY_ID}
+  secretAccessKey: ${AWS_SECRET_ACCESS_KEY}
+  region: ${AWS_REGION:ap-south-1}
+  bucketName: ${AWS_BUCKET_NAME:glowkart-media}
