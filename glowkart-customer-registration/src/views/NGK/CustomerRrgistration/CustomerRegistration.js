@@ -38,8 +38,12 @@ import AadhaarConsentModal from './AadhaarConsentModal'
 import UserConsentModal from './UserConsentModal'
 import CIcon from '@coreui/icons-react'
 import { cilCalendar, cilInfo } from '@coreui/icons'
+import {
+  isOnlyAlphabetsWithSpecialChars,
+  isValidAadhaarName,
+  isValidAlphaNumericName,
+} from '../Utills/isValidAlphaNumericName'
 export default function NGlowKartPatientRegistration_CoreUI() {
-  
   const today = new Date()
   const eighteenYearsAgo = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate())
 
@@ -82,8 +86,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     { value: 'Other', label: 'Other' },
   ]
 
- 
-
   useEffect(() => {
     async function fetchProcedures() {
       const list = await getAllProcedures()
@@ -102,8 +104,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
     fetchProcedures()
   }, [])
-
- 
 
   const [form, setForm] = useState({
     fullName: '',
@@ -250,8 +250,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     setForm((prev) => ({ ...prev, registraionCode: value }))
   }
 
-  
-
   function formatAndValidateDateInput(raw) {
     let digits = raw.replace(/\D/g, '').slice(0, 8) // max ddmmyyyy
 
@@ -304,7 +302,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       showCustomToast('⚠️ Unable to fetch city list. Check your internet.', 'error')
     }
   }
- 
 
   const hasFetchedRef = React.useRef(false)
 
@@ -373,7 +370,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       // ✔ If success, show toast + load cities
       showCustomToast(result.message || '🎉 Registration code verified!', 'success')
       await fetchCities()
-  
 
       applyBackendStatus(result.data)
 
@@ -398,7 +394,13 @@ export default function NGlowKartPatientRegistration_CoreUI() {
   function validate() {
     const e = {}
 
-    if (!form.fullName) e.fullName = 'Full name is required'
+    // if (!form.fullName) e.fullName = 'Full name is required'
+    if (!form.fullName) {
+      e.fullName = 'Full name is required'
+    } else if (!isValidAadhaarName(form.fullName)) {
+      e.fullName = 'Name must match Aadhaar (alphabets only)'
+    }
+
     if (!/^\d{10}$/.test(form.mobile)) {
       e.mobile = 'Enter a valid 10-digit mobile number'
     } else if (!/^[6-9]/.test(form.mobile)) {
@@ -409,8 +411,12 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
     if (!form.city) {
       e.city = 'City is required'
-    } else if (form.city === 'other' && !form.otherCity.trim()) {
-      e.otherCity = 'Please enter your city name'
+    } else if (form.city === 'other') {
+      if (!form.otherCity || !form.otherCity.trim()) {
+        e.otherCity = 'Please enter your city name'
+      } else if (!isValidAadhaarName(form.otherCity)) {
+        e.otherCity = 'City name only alphabets allowed'
+      }
     }
 
     if (!/^\d{12}$/.test(form.Aadhar)) e.Aadhar = 'Enter a valid 12-digit Aadhaar number'
@@ -425,7 +431,12 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     // else if (calculateAge(form.dob) < 18) e.dob = 'Must be at least 18 years old'
 
     if (form.serviceStatus == '1') {
-      if (!form.clinicName) e.clinicName = 'Clinic name required'
+      // if (!form.clinicName) e.clinicName = 'Clinic name required'
+      if (!form.clinicName) {
+        e.clinicName = 'Clinic name is required'
+      } else if (!isValidAlphaNumericName(form.clinicName)) {
+        e.clinicName = 'Clinic name must contain alphabets (numbers allowed)'
+      }
       if (!/^\d{6}$/.test(form.clinicCityArea)) {
         e.clinicCityArea = 'Pincode must be exactly 6 digits.'
       }
@@ -436,7 +447,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
         const max = new Date(maxToday)
         const min = new Date(minDate12Months)
 
-   
         if (!form.dateOfLastVisit) {
           e.dateOfLastVisit = 'Last visit date is required'
         } else if (!isValidLastVisitDate(form.dateOfLastVisit)) {
@@ -446,8 +456,12 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
       // if (!form.serviceType) e.serviceType = 'Service required'
       if (!form.serviceType || form.serviceType.length === 0) e.serviceType = 'Service required'
-      if (form.serviceType.includes('other') && !form.otherServiceName.trim()) {
-        e.otherServiceName = 'Please specify the service'
+      if (form.serviceType.includes('other')) {
+        if (!form.otherServiceName || !form.otherServiceName.trim()) {
+          e.otherServiceName = 'Please specify the service'
+        } else if (!isOnlyAlphabetsWithSpecialChars(form.otherServiceName)) {
+          e.otherServiceName = 'Service name must contain only alphabets'
+        }
       }
 
       if (!form.prescription)
@@ -457,19 +471,34 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     if (form.serviceStatus === '2') {
       if (!form.interestCategory) {
         e.interestCategory = 'Please select a category'
-      } else if (form.interestCategory === 'Other' && !form.otherInterestCategory.trim()) {
-        e.otherInterestCategory = 'Please specify the category'
+      }
+      //  else if (form.interestCategory === 'Other' && !form.otherInterestCategory.trim()) {
+      //   e.otherInterestCategory = 'Please specify the category'
+      // }
+      else if (form.interestCategory === 'Other') {
+        if (!form.otherInterestCategory || !form.otherInterestCategory.trim()) {
+          e.otherInterestCategory = 'Please specify the category'
+        } else if (!isOnlyAlphabetsWithSpecialChars(form.otherInterestCategory)) {
+          e.otherInterestCategory = 'Category must contain only alphabets'
+        }
       }
 
       if (!form.problemDescription || form.problemDescription.length === 0)
         e.problemDescription = 'Please select at least one concern'
 
-      if (form.problemDescription.includes('other') && !form.otherServiceName.trim()) {
-        e.otherServiceName = 'Please specify your concern'
+      // if (form.problemDescription.includes('other') && !form.otherServiceName.trim()) {
+      //   e.otherServiceName = 'Please specify your concern'
+      // }
+
+      if (form.problemDescription.includes('other')) {
+        if (!form.otherServiceName || !form.otherServiceName.trim()) {
+          e.otherServiceName = 'Please specify your concern'
+        } else if (!isOnlyAlphabetsWithSpecialChars(form.otherServiceName)) {
+          e.otherServiceName = 'Service name must contain only alphabets'
+        }
       }
 
       if (!form.skinTone) e.skinTone = 'Please select your skin tone'
-  
     }
 
     if (!form.aadhaarConsent)
@@ -547,7 +576,8 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       concern: form.problemDescription.map((item) =>
         item === 'other' ? form.otherServiceName : item,
       ),
-      category: form.interestCategory,
+      category:
+        form.interestCategory === 'Other' ? form.otherInterestCategory : form.interestCategory,
       skinTone: form.skinTone === 'other' ? form.skinToneOther : form.skinTone,
       photo: form.samplePhoto,
       aadhaarConsent: form.aadhaarConsent,
@@ -698,23 +728,30 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
   return (
     <div
-      className="d-flex justify-content-center align-items-center w-100 bg"
+      className="d-flex justify-content-center   w-100 bg"
       style={{
-        height: '100vh',
+        minHeight: '100vh',
 
         overflow: 'hidden',
       }}
     >
-      <div className="d-flex w-100 bgCard">
+      <div
+        className="d-flex bgCard"
+        style={{
+          width: '100%',
+          maxWidth: '1400px',
+          margin: '0 auto',
+        }}
+      >
         {/* LEFT IMAGE */}
 
         <div
-          className="d-none d-md-block left-image"
+          className="d-none d-md-block left-image  "
           style={{
             width: '45%',
             backgroundImage: `url(${bgLogo})`,
-            backgroundSize: 'fill',
-            backgroundPosition: 'bottom',
+            backgroundSize: 'contain',
+            backgroundPosition: 'center ',
             backgroundRepeat: 'no-repeat',
           }}
         >
@@ -899,7 +936,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                       />
 
                       <h4 className="m-0 fw-bold text-center w-100 gradient-text">Registration</h4>
- 
                     </div>
                     <div
                       style={{
@@ -1033,11 +1069,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         <h4 className="m-0 fw-bold text-center w-100 gradient-text">
                           Registration
                         </h4>
-
-          
                       </div>
-
-                 
                     </div>
                     <CRow className="g-4 mt-4">
                       {/* Full Name + Mobile */}
@@ -1051,10 +1083,42 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         <CFormInput
                           ref={inputRefs.fullName}
                           name="fullName"
+                          placeholder="Enter Full Name (as per Aadhaar)"
                           value={form.fullName}
-                          onChange={handleChange}
-                          placeholder="Enter Full Name"
+                          onChange={(e) => {
+                            let value = e.target.value
+
+                            // ❌ Block numbers & special characters (allow dot also)
+                            if (!/^[A-Za-z. ]*$/.test(value)) return
+
+                            // 🔹 Remove extra spaces
+                            value = value.replace(/\s+/g, ' ').trimStart()
+
+                            // 🔹 Check FULL uppercase
+                            const isAllUpperCase = value && value === value.toUpperCase()
+
+                            if (!isAllUpperCase) {
+                              value = value
+                                .toLowerCase()
+                                .replace(/\b\w/g, (char) => char.toUpperCase())
+                            }
+
+                            // ✅ Update form
+                            setForm((prev) => ({
+                              ...prev,
+                              fullName: value,
+                            }))
+
+                            // ✅ Clear error when valid
+                            if (isValidAadhaarName(value)) {
+                              setErrors((prev) => ({
+                                ...prev,
+                                fullName: null,
+                              }))
+                            }
+                          }}
                         />
+
                         {errors.fullName && (
                           <p
                             style={{
@@ -1173,7 +1237,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         {errors.dob && <p style={{ color: 'red' }}>{errors.dob}</p>}
                       </CCol>
 
-                     
                       <CCol md={6}>
                         <CFormLabel
                           className="label-gradient"
@@ -1201,7 +1264,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           {form.city === 'other' && (
                             <CFormInput
                               className="mt-2"
-                              placeholder="Enter your city"
+                              placeholder="Enter your city / town / village"
                               value={form.otherCity}
                               ref={inputRefs.otherCity}
                               onChange={(e) => {
@@ -1518,8 +1581,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             No, I'm Interested
                           </CButton>
                         </div>
-
-                        
                       </CCol>
 
                       {/* Conditional fields */}
@@ -1576,7 +1637,6 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                               <p style={{ color: 'red' }}>{errors.clinicCityArea}</p>
                             )}
                           </CCol>
- 
 
                           <CCol md={6}>
                             <CFormLabel
@@ -1661,17 +1721,28 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             {/* Other input */}
                             {showOtherInput && (
                               <div style={{ marginTop: 10 }}>
-                               
                                 <CFormInput
                                   ref={inputRefs.otherServiceName}
                                   placeholder="Enter Service Name"
                                   value={form.otherServiceName || ''}
-                                  onChange={(e) =>
+                                  onChange={(e) => {
+                                    let value = e.target.value
+
+                                    // ❌ Block numbers only
+                                    if (/\d/.test(value)) return
+
+                                    // Remove extra spaces
+                                    value = value.replace(/\s+/g, ' ').trimStart()
+
                                     setForm((prev) => ({
                                       ...prev,
-                                      otherServiceName: e.target.value,
+                                      otherServiceName: value,
                                     }))
-                                  }
+
+                                    if (isOnlyAlphabetsWithSpecialChars(value)) {
+                                      setErrors((prev) => ({ ...prev, otherServiceName: null }))
+                                    }
+                                  }}
                                 />
                               </div>
                             )}
@@ -1804,13 +1875,35 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                                   placeholder="Please specify category"
                                   value={form.otherInterestCategory}
                                   onChange={(e) => {
+                                    let value = e.target.value
+
+                                    // ❌ Block numbers only
+                                    if (/\d/.test(value)) return
+
+                                    // Remove extra spaces
+                                    value = value.replace(/\s+/g, ' ').trimStart()
+
+                                    setForm((prev) => ({
+                                      ...prev,
+                                      otherInterestCategory: value,
+                                    }))
+
+                                    if (isOnlyAlphabetsWithSpecialChars(value)) {
+                                      setErrors((prev) => ({
+                                        ...prev,
+                                        otherInterestCategory: null,
+                                      }))
+                                    }
+                                  }}
+                                />
+                                {/* onChange={(e) => {
                                     setForm((prev) => ({
                                       ...prev,
                                       otherInterestCategory: e.target.value,
                                     }))
                                     setErrors((prev) => ({ ...prev, otherInterestCategory: null }))
-                                  }}
-                                />
+                                  }} */}
+                                {/* /> */}
                               </div>
                             )}
 
@@ -1838,7 +1931,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                                   { value: 'other', label: 'Others' }, // add one clean version
                                 ]}
                                 isMulti
-                                placeholder="your concerns/procedures..."
+                                placeholder="Your concerns/procedures..."
                                 value={[
                                   ...procedureOptions.filter((opt) =>
                                     form.problemDescription?.includes(opt.label),
@@ -1876,12 +1969,27 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                                   ref={inputRefs.otherServiceName}
                                   placeholder="Enter your concern"
                                   value={form.otherServiceName}
-                                  onChange={(e) =>
+                                  onChange={(e) => {
+                                    let value = e.target.value
+
+                                    // ❌ Block numbers only
+                                    if (/\d/.test(value)) return
+
+                                    // Remove extra spaces
+                                    value = value.replace(/\s+/g, ' ').trimStart()
+
                                     setForm((prev) => ({
                                       ...prev,
-                                      otherServiceName: e.target.value,
+                                      otherServiceName: value,
                                     }))
-                                  }
+
+                                    if (isOnlyAlphabetsWithSpecialChars(value)) {
+                                      setErrors((prev) => ({
+                                        ...prev,
+                                        otherServiceName: null,
+                                      }))
+                                    }
+                                  }}
                                 />
                               </div>
                             )}
@@ -2035,13 +2143,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
               </CForm>
             )}
           </div>
-         
 
           <AadhaarConsentModal show={showAadhaarModal} onClose={() => setShowAadhaarModal(false)} />
 
           <UserConsentModal show={showConsentModal} onClose={() => setShowConsentModal(false)} />
-
-          
         </div>
       </div>
     </div>

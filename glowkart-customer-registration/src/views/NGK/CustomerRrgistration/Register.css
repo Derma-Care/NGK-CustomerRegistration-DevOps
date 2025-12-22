@@ -427,3 +427,19 @@ label:hover {
     background: transparent !important;
   }
 }
+@media (min-width: 1600px) {
+  .bgCard {
+    min-height: 90vh;
+  }
+
+  .left-image {
+    background-position: center center !important;
+  }
+
+  .form-panel {
+    padding: 60px 60px;
+  }
+}
+.form-panel {
+  align-self: stretch;
+}
