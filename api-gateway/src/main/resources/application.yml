@@ -1,0 +1,86 @@
+spring:
+  application:
+    name: api-gateway
+
+  main:
+    web-application-type: reactive
+
+  cloud:
+    config:
+      uri: http://config-server:8888
+
+    gateway:
+      # ---- GLOBAL TIMEOUTS (VERY IMPORTANT) ----
+      default-filters:
+        - name: RequestTimeout
+          args:
+            timeout: 60000   # 60 seconds
+
+      httpclient:
+        connectTimeout: 30000      # NEW: 30 seconds
+        responseTimeout: 60000     # already present
+        pool:
+          maxConnections: 200
+          acquireTimeout: 30000
+
+      # -------- ROUTES --------
+      routes:
+        - id: admin-service
+          uri: lb://admin-service
+          predicates:
+            - Path=/admin/**
+
+        - id: clinic-admin-service
+          uri: lb://clinicadmin-service
+          predicates:
+            - Path=/clinic-admin/**
+
+        - id: customer-service
+          uri: lb://customer-service
+          predicates:
+            - Path=/api/**
+
+        - id: onboarding-service
+          uri: lb://onboarding-service
+          predicates:
+            - Path=/onboard/**
+
+        - id: procedure-service
+          uri: lb://procedure-service
+          predicates:
+            - Path=/procedures/**
+
+      # ---- IMPORTANT: CORS ----
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - "http://localhost:3000"
+              - "https://glowkartclinic.ashokfruit.shop"
+              - "https://glowkartmain.ashokfruit.shop"
+              - "https://glowkartdoctor.ashokfruit.shop"
+
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+            allowedHeaders: "*"
+            allowCredentials: true
+
+server:
+  port: 8080
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICE_URL_DEFAULT_ZONE:http://eureka-server:8761/eureka/}
+    register-with-eureka: true
+    fetch-registry: true
+
+  instance:
+    prefer-ip-address: true
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
