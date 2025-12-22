@@ -9,6 +9,8 @@ import {
   CCol,
   CAlert,
   CFormSelect,
+  CInputGroup,
+  CInputGroupText,
 } from '@coreui/react'
 import DermaCareLogo from '../../../assets/images/logoP.png'
 import bgLogo from '../../../assets/images/bgLogo.png'
@@ -34,8 +36,10 @@ import { NGK_COLORS } from '../../../Constant/Themes'
 import { BASE_URL, wifiUrl } from '../../../baseUrl'
 import AadhaarConsentModal from './AadhaarConsentModal'
 import UserConsentModal from './UserConsentModal'
+import CIcon from '@coreui/icons-react'
+import { cilCalendar, cilInfo } from '@coreui/icons'
 export default function NGlowKartPatientRegistration_CoreUI() {
-  //   const today = new Date()
+  
   const today = new Date()
   const eighteenYearsAgo = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate())
 
@@ -78,21 +82,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     { value: 'Other', label: 'Other' },
   ]
 
-  // const STATE_CITY_MAP = {
-  //   Telangana: ['Hyderabad', 'Warangal', 'Karimnagar', 'Nizamabad', 'Khammam'],
-  //   'Andhra Pradesh': ['Visakhapatnam', 'Vijayawada', 'Guntur', 'Tirupati', 'Nellore'],
-  //   'Tamil Nadu': ['Chennai', 'Coimbatore', 'Madurai', 'Salem', 'Erode'],
-  //   Karnataka: ['Bengaluru', 'Mysuru', 'Mangaluru', 'Hubballi', 'Belagavi'],
-  //   Kerala: ['Thiruvananthapuram', 'Kochi', 'Kozhikode', 'Thrissur', 'Kollam'],
-  //   Maharashtra: ['Mumbai', 'Pune', 'Nagpur', 'Nashik', 'Aurangabad'],
-  // }
-
-  // const cityOptions = Object.values(STATE_CITY_MAP)
-  //   .flat()
-  //   .map((city) => ({
-  //     label: city,
-  //     value: city,
-  //   }))
+ 
 
   useEffect(() => {
     async function fetchProcedures() {
@@ -113,16 +103,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     fetchProcedures()
   }, [])
 
-  // useEffect(() => {
-  //   // smooth scroll window (fallback)
-  //   window.scrollTo({ top: 0, behavior: 'smooth' })
-
-  //   // smooth scroll the scrollable container
-  //   const panel = document.querySelector('.form-panel')
-  //   if (panel) {
-  //     panel.scrollTo({ top: 0, behavior: 'smooth' })
-  //   }
-  // }, [])
+ 
 
   const [form, setForm] = useState({
     fullName: '',
@@ -269,26 +250,38 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     setForm((prev) => ({ ...prev, registraionCode: value }))
   }
 
-  // useEffect(() => {
-  //   async function fetchCities() {
-  //     try {
-  //       const res = await fetch(`${wifiUrl}/api/customer/cities`, { cache: 'no-store' })
+  
 
-  //       if (!res.ok) {
-  //         throw new Error('Server error')
-  //       }
+  function formatAndValidateDateInput(raw) {
+    let digits = raw.replace(/\D/g, '').slice(0, 8) // max ddmmyyyy
 
-  //       const json = await res.json()
+    let day = digits.slice(0, 2)
+    let month = digits.slice(2, 4)
+    let year = digits.slice(4, 8)
 
-  //       if (json.success) setCityList(json.data)
-  //     } catch (err) {
-  //       console.log('City fetch error:', err)
-  //       showCustomToast('⚠️ Unable to fetch city list. Check your internet.', 'error')
-  //     }
-  //   }
+    let error = ''
 
-  //   fetchCities()
-  // }, [])
+    // ---- Day validation ----
+    if (day.length === 2 && parseInt(day) > 31) {
+      day = '31'
+      error = 'Day cannot be greater than 31'
+    }
+
+    // ---- Month validation ----
+    if (month.length === 2 && parseInt(month) > 12) {
+      month = '12'
+      error = 'Month cannot be greater than 12'
+    }
+
+    // ---- Build formatted value progressively ----
+    let formatted = day
+    if (digits.length > 2) formatted += '/'
+    if (month) formatted += month
+    if (digits.length > 4) formatted += '/'
+    if (year) formatted += year
+
+    return { formatted, error }
+  }
 
   async function fetchCities() {
     try {
@@ -311,25 +304,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       showCustomToast('⚠️ Unable to fetch city list. Check your internet.', 'error')
     }
   }
-
-  //   const [cityOptions, setCityOptions] = useState([])
-  // const [loadingCities, setLoadingCities] = useState(false)
-
-  // const fetchCities = async () => {
-  //   try {
-  //     setLoadingCities(true)
-  //     const res = await axios.get('/api/cities')
-
-  //     // Merge all state cities into one list
-  //     const allCities = Object.values(res.data.data).flat()
-
-  //     setCityOptions(allCities)
-  //   } catch (error) {
-  //     console.error('City API error', error)
-  //   } finally {
-  //     setLoadingCities(false)
-  //   }
-  // }
+ 
 
   const hasFetchedRef = React.useRef(false)
 
@@ -341,6 +316,36 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     }
 
     hasFetchedRef.current = true
+  }
+
+  function isValidDDMMYYYY(dateStr) {
+    if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) return false
+
+    const [dd, mm, yyyy] = dateStr.split('/').map(Number)
+
+    // basic bounds
+    if (yyyy < 1900 || mm < 1 || mm > 12 || dd < 1 || dd > 31) return false
+
+    // days per month
+    const daysInMonth = new Date(yyyy, mm, 0).getDate()
+
+    return dd <= daysInMonth
+  }
+
+  function isValidLastVisitDate(dateStr) {
+    if (!isValidDDMMYYYY(dateStr)) return false
+
+    const [dd, mm, yyyy] = dateStr.split('/').map(Number)
+    const visitDate = new Date(yyyy, mm - 1, dd)
+
+    const today = new Date()
+    const oneYearAgo = new Date()
+    oneYearAgo.setFullYear(today.getFullYear() - 1)
+
+    if (visitDate > today) return false
+    if (visitDate < oneYearAgo) return false
+
+    return true
   }
 
   const handleSubmitReferralCode = async () => {
@@ -368,14 +373,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       // ✔ If success, show toast + load cities
       showCustomToast(result.message || '🎉 Registration code verified!', 'success')
       await fetchCities()
-      // await new Promise((res) => setTimeout(res, 200))
-
-      // ⭐ SAFETY CHECK: Only apply backend status if data exists
-      // if (result.data) {
-      //   applyBackendStatus(result.data)
-      // } else {
-      //   console.warn('No backend (status) data returned, skipping applyBackendStatus.')
-      // }
+  
 
       applyBackendStatus(result.data)
 
@@ -417,9 +415,14 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
     if (!/^\d{12}$/.test(form.Aadhar)) e.Aadhar = 'Enter a valid 12-digit Aadhaar number'
 
-    if (!form.dob) e.dob = 'Date of birth required'
+    if (!form.dob) {
+      e.dob = 'Date of birth is required'
+    } else if (!isValidDOB(form.dob)) {
+      e.dob = 'Enter valid DOB (dd/mm/yyyy) and must be 18+'
+    }
+
     if (!form.gender) e.gender = 'gender required'
-    else if (calculateAge(form.dob) < 18) e.dob = 'Must be at least 18 years old'
+    // else if (calculateAge(form.dob) < 18) e.dob = 'Must be at least 18 years old'
 
     if (form.serviceStatus == '1') {
       if (!form.clinicName) e.clinicName = 'Clinic name required'
@@ -433,10 +436,11 @@ export default function NGlowKartPatientRegistration_CoreUI() {
         const max = new Date(maxToday)
         const min = new Date(minDate12Months)
 
-        if (selected > max) {
-          e.dateOfLastVisit = 'Future dates not allowed'
-        } else if (selected < min) {
-          e.dateOfLastVisit = 'Visit must be within last 12 months'
+   
+        if (!form.dateOfLastVisit) {
+          e.dateOfLastVisit = 'Last visit date is required'
+        } else if (!isValidLastVisitDate(form.dateOfLastVisit)) {
+          e.dateOfLastVisit = 'Date must be within the last 1 year (dd/mm/yyyy)'
         }
       }
 
@@ -465,11 +469,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       }
 
       if (!form.skinTone) e.skinTone = 'Please select your skin tone'
-      // if (!form.skinToneOther.trim()) {
-      //   e.skinToneOther = 'Please enter your skin tone'
-      // }
-
-      // samplePhoto optional
+  
     }
 
     if (!form.aadhaarConsent)
@@ -503,6 +503,12 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     otherCity: React.useRef(null),
   }
 
+  function ddmmyyyyToIso(dateStr) {
+    if (!dateStr) return null
+    const [dd, mm, yyyy] = dateStr.split('/')
+    return `${yyyy}-${mm}-${dd}` // yyyy-MM-dd
+  }
+
   async function handleSubmit(e) {
     e.preventDefault()
     // 1️⃣ Check serviceStatus explicitly
@@ -525,10 +531,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       mobile: form.mobile,
       email: form.email,
       city: form.city === 'other' ? form.otherCity : form.city,
-      dob: form.dob,
+      dob: ddmmyyyyToIso(form.dob),
       clinicName: form.clinicName,
       clinicCityArea: form.clinicCityArea,
-      dateOfLastVisit: form.dateOfLastVisit,
+      dateOfLastVisit: ddmmyyyyToIso(form.dateOfLastVisit),
       serviceType: form.serviceType.map((s) => (s === 'other' ? form.otherServiceName : s)),
       blood: form.blood,
       registrationCode: form.registraionCode || sessionStorage.getItem('registraionCode'),
@@ -615,7 +621,11 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     }
 
     setServiceStatusError('') // ⭐ Clear when no missing consents
-    setForm({ ...form, serviceStatus: status })
+    setForm((prev) => ({
+      ...prev,
+      serviceStatus: status,
+    }))
+
     setTimeout(() => {
       if (serviceStatusRef.current) {
         serviceStatusRef.current.scrollIntoView({
@@ -624,6 +634,21 @@ export default function NGlowKartPatientRegistration_CoreUI() {
         })
       }
     }, 200)
+  }
+
+  function isValidDOB(dobStr) {
+    if (!isValidDDMMYYYY(dobStr)) return false
+
+    const [dd, mm, yyyy] = dobStr.split('/').map(Number)
+    const dob = new Date(yyyy, mm - 1, dd)
+
+    const today = new Date()
+    let age = today.getFullYear() - yyyy
+    const m = today.getMonth() - (mm - 1)
+
+    if (m < 0 || (m === 0 && today.getDate() < dd)) age--
+
+    return age >= 18
   }
 
   function cleanUserData(data) {
@@ -653,14 +678,21 @@ export default function NGlowKartPatientRegistration_CoreUI() {
   const scrollToFirstError = (errorsObject) => {
     const firstErrorField = Object.keys(errorsObject).find((key) => errorsObject[key])
 
-    if (firstErrorField && inputRefs[firstErrorField]?.current) {
-      inputRefs[firstErrorField].current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center',
-      })
+    if (!firstErrorField) return
 
-      // Also focus the field (optional)
-      inputRefs[firstErrorField].current.focus()
+    const fieldRef = inputRefs[firstErrorField]?.current
+    const container = document.querySelector('.form-panel')
+
+    if (fieldRef && container) {
+      const fieldTop =
+        fieldRef.getBoundingClientRect().top -
+        container.getBoundingClientRect().top +
+        container.scrollTop
+
+      container.scrollTo({
+        top: fieldTop - 120,
+        behavior: 'smooth',
+      })
     }
   }
 
@@ -867,9 +899,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                       />
 
                       <h4 className="m-0 fw-bold text-center w-100 gradient-text">Registration</h4>
-
-                      {/* <h4 className="m-0 fw-bold text-center w-100 gradient-text">Registration</h4> */}
-                      {/* <small className="sub-gradient-text">Registration</small> */}
+ 
                     </div>
                     <div
                       style={{
@@ -896,7 +926,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           href="https://www.instagram.com/ngkderma"
                           target="_blank"
                           rel="noopener noreferrer"
-                          style={{ color: "blue", fontWeight: '600' }}
+                          style={{ color: 'blue', fontWeight: '600' }}
                         >
                           @ngkderma
                         </a>
@@ -1004,12 +1034,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           Registration
                         </h4>
 
-                        {/* <h4 className="m-0 fw-bold text-center w-100 gradient-text">Registration</h4> */}
-                        {/* <small className="sub-gradient-text">Registration</small> */}
+          
                       </div>
 
-                      {/* <h4 className="m-0 fw-bold text-center w-100 gradient-text">Registration</h4> */}
-                      {/* <small className="sub-gradient-text">Registration</smmall> */}
+                 
                     </div>
                     <CRow className="g-4 mt-4">
                       {/* Full Name + Mobile */}
@@ -1094,140 +1122,58 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           className="label-gradient "
                           style={{ color: NGK_COLORS.primarySoft }}
                         >
-                          Gender
+                          Gender <span className="text-danger">*</span>
                         </CFormLabel>
-                        <CFormSelect
-                          name="gender"
-                          value={form.gender}
-                          onChange={handleChange}
-                          ref={inputRefs.gender}
-                        >
-                          <option value="">Select Gender</option>
-                          <option value="Male">Male</option>
-                          <option value="Female">Female</option>
-                          <option value="Others">Others</option>
-                        </CFormSelect>
-
+                        <div ref={inputRefs.gender}>
+                          <CFormSelect name="gender" value={form.gender} onChange={handleChange}>
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Others">Others</option>
+                          </CFormSelect>
+                        </div>
                         {errors.gender && <p style={{ color: 'red' }}>{errors.gender}</p>}
                       </CCol>
                       <CCol md={6}>
                         <CFormLabel
-                          className=" label-gradient"
+                          className="label-gradient"
                           style={{ color: NGK_COLORS.primarySoft }}
                         >
-                          Date of birth <span className="text-danger">*</span>
+                          Date of Birth <span className="text-danger">*</span>
                         </CFormLabel>
+                        <div ref={inputRefs.dob}>
+                          <CInputGroup>
+                            <CFormInput
+                              type="text"
+                              placeholder="dd/mm/yyyy"
+                              value={form.dob}
+                              maxLength={10}
+                              inputMode="numeric"
+                              onChange={(e) => {
+                                const { formatted, error } = formatAndValidateDateInput(
+                                  e.target.value,
+                                )
 
-                        <div style={{ position: 'relative' }}>
-                          {/* {!form.dob && (
-                            <span
-                              style={{
-                                position: 'absolute',
-                                left: '12px',
-                                top: '50%',
-                                transform: 'translateY(-50%)',
-                                pointerEvents: 'none',
-                                color: '#999',
+                                setForm((prev) => ({ ...prev, dob: formatted }))
+                                setErrors((prev) => ({ ...prev, dob: error || null }))
                               }}
+                            />
+
+                            <CInputGroupText
+                              style={{
+                                backgroundColor: '#f3f3f3',
+                                cursor: 'not-allowed',
+                              }}
+                              title="Enter DOB manually (18+)"
                             >
-                              dd/mm/yyyy
-                            </span>
-                          )} */}
-
-                          <CFormInput
-                            id="dobInput"
-                            type="date"
-                            name="dob"
-                            value={form.dob}
-                            min={hundredYearsAgoISO}
-                            max={eighteenYearsAgoISO}
-                            onClick={(e) => e.preventDefault()} // ✅ stop auto open
-                            onFocus={(e) => e.target.blur()} // ✅ iOS fix
-                            onChange={handleChange}
-                          />
-
-                          {/* Calendar icon */}
-                          <span
-                            onClick={() => {
-                              const input = document.getElementById('dobInput')
-
-                              // force 18+ default date
-                              if (!input.value) {
-                                input.value = eighteenYearsAgoISO
-                                input.dispatchEvent(new Event('change', { bubbles: true }))
-                              }
-
-                              // open picker
-                              if (input.showPicker) {
-                                input.showPicker()
-                              } else {
-                                input.click() // iOS fallback
-                              }
-                            }}
-                            style={{
-                              position: 'absolute',
-                              right: '10px',
-                              top: '50%',
-                              transform: 'translateY(-50%)',
-                              cursor: 'pointer',
-                              fontSize: '20px',
-                              color: NGK_COLORS.primarySoft,
-                              zIndex: 3,
-                            }}
-                          >
-                            📅
-                          </span>
+                              <CIcon icon={cilCalendar} style={{ color: '#999' }} />
+                            </CInputGroupText>
+                          </CInputGroup>
                         </div>
-
                         {errors.dob && <p style={{ color: 'red' }}>{errors.dob}</p>}
                       </CCol>
 
-                      {/* <CCol md={6}>
-                        <CFormLabel
-                          className="label-gradient "
-                          style={{ color: NGK_COLORS.primarySoft }}
-                        >
-                          City <span className="text-danger">*</span>
-                        </CFormLabel>
-                        <div ref={inputRefs.city}>
-                          <Select
-                            styles={{ color: 'black' }}
-                            name="city"
-                            value={form.city ? { label: form.city, value: form.city } : null}
-                            onChange={(selected) => {
-                              handleChange({
-                                target: { name: 'city', value: selected?.value || '' },
-                              })
-                            }}
-                            options={[
-                              ...cityList.map((city) => ({ label: city, value: city })),
-                              { label: 'Other', value: 'other' },
-                            ]}
-                            placeholder="Select or Search City"
-                            isSearchable
-                          />
-                        </div>
-                      
-                        {form.city === 'other' && (
-                          <CFormInput
-                            ref={inputRefs.otherCity}
-                            className="mt-2"
-                            placeholder="Enter City / Area"
-                            value={form.otherCity || ''}
-                            onChange={(e) => {
-                              const val = e.target.value
-                              setForm((prev) => ({
-                                ...prev,
-                                otherCity: val,
-                              }))
-                              setErrors((prev) => ({ ...prev, otherCity: null }))
-                            }}
-                          />
-                        )}
-                        {errors.otherCity && <p style={{ color: 'red' }}>{errors.otherCity}</p>}
-
-                        {errors.city && <p style={{ color: 'red' }}>{errors.city}</p>}
-                      </CCol> */}
+                     
                       <CCol md={6}>
                         <CFormLabel
                           className="label-gradient"
@@ -1235,34 +1181,42 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         >
                           City <span className="text-danger">*</span>
                         </CFormLabel>
-
-                        <Select
-                          placeholder="Select or Search City"
-                          isSearchable
-                          value={form.city ? { label: form.city, value: form.city } : null}
-                          onChange={(selected) => {
-                            setForm((prev) => ({
-                              ...prev,
-                              city: selected?.value || '',
-                              otherCity: '',
-                            }))
-                            setErrors((prev) => ({ ...prev, city: null }))
-                          }}
-                          options={[...cityOptions, { label: 'Other', value: 'other' }]}
-                          styles={selectStyles}
-                        />
-
-                        {/* Other city input */}
-                        {form.city === 'other' && (
-                          <CFormInput
-                            className="mt-2"
-                            placeholder="Enter your city"
-                            value={form.otherCity}
-                            onChange={(e) =>
-                              setForm((prev) => ({ ...prev, otherCity: e.target.value }))
-                            }
+                        <div ref={inputRefs.city}>
+                          <Select
+                            placeholder="Select or Search City"
+                            isSearchable
+                            value={form.city ? { label: form.city, value: form.city } : null}
+                            onChange={(selected) => {
+                              setForm((prev) => ({
+                                ...prev,
+                                city: selected?.value || '',
+                                otherCity: '',
+                              }))
+                              setErrors((prev) => ({ ...prev, city: null }))
+                            }}
+                            options={[...cityOptions, { label: 'Other', value: 'other' }]}
+                            styles={selectStyles}
                           />
-                        )}
+
+                          {form.city === 'other' && (
+                            <CFormInput
+                              className="mt-2"
+                              placeholder="Enter your city"
+                              value={form.otherCity}
+                              ref={inputRefs.otherCity}
+                              onChange={(e) => {
+                                const value = e.target.value
+
+                                setForm((prev) => ({ ...prev, otherCity: value }))
+
+                                // ✅ clear error when user types
+                                if (value.trim()) {
+                                  setErrors((prev) => ({ ...prev, otherCity: null }))
+                                }
+                              }}
+                            />
+                          )}
+                        </div>
 
                         {errors.city && <p style={{ color: 'red' }}>{errors.city}</p>}
                         {errors.otherCity && <p style={{ color: 'red' }}>{errors.otherCity}</p>}
@@ -1278,9 +1232,12 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           Aadhaar Card Number <span className="text-danger">*</span>
                         </CFormLabel>
 
-                        <div className="d-flex align-items-center" style={{ gap: '10px' }}>
+                        <div
+                          className="d-flex align-items-center"
+                          style={{ gap: '10px' }}
+                          ref={inputRefs.Aadhar}
+                        >
                           <CFormInput
-                            ref={inputRefs.Aadhar}
                             name="Aadhar"
                             inputMode="numeric"
                             maxLength={12}
@@ -1356,7 +1313,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             checked={form.userConsent}
                             disabled={form.userConsent}
                             onChange={(e) => {
-                              setForm({ ...form, userConsent: e.target.checked })
+                              setForm((prev) => ({
+                                ...prev,
+                                userConsent: e.target.checked,
+                              }))
 
                               if (e.target.checked) {
                                 setErrors((prev) => ({ ...prev, userConsent: '' }))
@@ -1407,7 +1367,9 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           checked={form.privacyConsent}
                           disabled={form.privacyConsent}
                           onChange={(e) => {
-                            setForm({ ...form, privacyConsent: e.target.checked })
+                            // setForm({ ...form, privacyConsent: e.target.checked })
+                            setForm((prev) => ({ ...prev, privacyConsent: e.target.checked }))
+
                             if (e.target.checked) {
                               setErrors((prev) => ({ ...prev, privacyConsent: '' }))
                               setServiceStatusError('')
@@ -1468,7 +1430,8 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                                 transition: 'all 0.3s ease',
                               }}
                               onChange={(e) => {
-                                setForm({ ...form, aadhaarConsent: e.target.checked })
+                                setForm((prev) => ({ ...prev, aadhaarConsent: e.target.checked }))
+                                // setForm({ ...form, aadhaarConsent: e.target.checked })
 
                                 // remove error when checked
                                 if (e.target.checked) {
@@ -1556,28 +1519,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           </CButton>
                         </div>
 
-                        {/* <a
-                        href="/pdf/privacy-policy.pdf"
-                        download="Nehas_GlowKart_Privacy_Policy.pdf"
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          padding: '10px 16px',
-                          backgroundColor: '#ff2e85',
-                          color: 'white',
-                          textDecoration: 'none',
-                          borderRadius: '10px',
-                          fontWeight: '600',
-                          width: 'fit-content',
-                        }}
-                      >
-                        <img
-                          src="https://cdn-icons-png.flaticon.com/512/724/724933.png"
-                          style={{ width: 20, height: 20 }}
-                        />
-                        Download Privacy Policy
-                      </a> */}
+                        
                       </CCol>
 
                       {/* Conditional fields */}
@@ -1600,7 +1542,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             {errors.clinicName && (
                               <p
                                 style={{
-                                  color: '#ff2e85',
+                                  color: 'red',
                                 }}
                               >
                                 {errors.clinicName}
@@ -1634,37 +1576,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                               <p style={{ color: 'red' }}>{errors.clinicCityArea}</p>
                             )}
                           </CCol>
-
-                          {/* <CCol md={6}>
-                            <CFormLabel
-                              className="label-gradient"
-                              style={{ color: NGK_COLORS.primarySoft }}
-                            >
-                              Last Visit Date <span className="text-danger">*</span>
-                            </CFormLabel>
-
-                            <CFormInput
-                              ref={inputRefs.dateOfLastVisit}
-                              type="date"
-                              name="dateOfLastVisit"
-                              max={maxToday} // today
-                              min={minDate12Months} // today - 1 year
-                              value={form.dateOfLastVisit}
-                              onFocus={(e) => {
-                                const input = e.target
-                                input.value = maxToday // show today's date on picker open
-                                input.showPicker?.()
-                                setTimeout(() => {
-                                  if (!form.dateOfLastVisit) input.value = ''
-                                }, 0)
-                              }}
-                              onChange={handleChange}
-                            />
-
-                            {errors.dateOfLastVisit && (
-                              <p style={{ color: '#ff2e85' }}>{errors.dateOfLastVisit}</p>
-                            )}
-                          </CCol> */}
+ 
 
                           <CCol md={6}>
                             <CFormLabel
@@ -1674,61 +1586,39 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                               Last Visit Date <span className="text-danger">*</span>
                             </CFormLabel>
 
-                            <div style={{ position: 'relative' }}>
-                              {/* Placeholder dd/mm/yyyy (only when input is empty) */}
-                              {!form.dateOfLastVisit && (
-                                <span
-                                  style={{
-                                    position: 'absolute',
-                                    left: '12px',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
-                                    pointerEvents: 'none',
-                                    color: '#999',
+                            <div ref={inputRefs.dateOfLastVisit}>
+                              <CInputGroup>
+                                <CFormInput
+                                  type="text"
+                                  placeholder="dd/mm/yyyy"
+                                  value={form.dateOfLastVisit}
+                                  maxLength={10}
+                                  inputMode="numeric"
+                                  onChange={(e) => {
+                                    const { formatted, error } = formatAndValidateDateInput(
+                                      e.target.value,
+                                    )
+
+                                    setForm((prev) => ({ ...prev, dateOfLastVisit: formatted }))
+                                    setErrors((prev) => ({
+                                      ...prev,
+                                      dateOfLastVisit: error || null,
+                                    }))
                                   }}
+                                />
+
+                                {/* 📅 Suffix icon (disabled UI only) */}
+
+                                <CInputGroupText
+                                  style={{
+                                    backgroundColor: '#f3f3f3',
+                                    cursor: 'not-allowed',
+                                  }}
+                                  title="Enter date manually (within last 1 year)"
                                 >
-                                  dd/mm/yyyy
-                                </span>
-                              )}
-
-                              <CFormInput
-                                id="lastVisitInput"
-                                ref={inputRefs.dateOfLastVisit}
-                                type="date"
-                                name="dateOfLastVisit"
-                                max={maxToday} // today
-                                min={minDate12Months} // today - 1 year
-                                value={form.dateOfLastVisit}
-                                style={{ position: 'relative', zIndex: 2 }}
-                                onFocus={(e) => {
-                                  const input = e.target
-                                  input.value = maxToday // show today when opening picker
-                                  input.showPicker?.()
-                                  setTimeout(() => {
-                                    if (!form.dateOfLastVisit) input.value = ''
-                                  }, 0)
-                                }}
-                                onChange={handleChange}
-                              />
-
-                              {/* 📅 Calendar icon (tap to open picker) */}
-                              <span
-                                onClick={() =>
-                                  document.getElementById('lastVisitInput')?.showPicker?.()
-                                }
-                                style={{
-                                  position: 'absolute',
-                                  right: '9px',
-                                  top: '50%',
-                                  transform: 'translateY(-50%)',
-                                  cursor: 'pointer',
-                                  fontSize: '20px',
-                                  color: NGK_COLORS.primarySoft,
-                                  zIndex: 3,
-                                }}
-                              >
-                                📅
-                              </span>
+                                  <CIcon icon={cilCalendar} style={{ color: '#999' }} />
+                                </CInputGroupText>
+                              </CInputGroup>
                             </div>
 
                             {errors.dateOfLastVisit && (
@@ -1771,12 +1661,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             {/* Other input */}
                             {showOtherInput && (
                               <div style={{ marginTop: 10 }}>
-                                {/* <CFormLabel
-                                  className="label-gradient"
-                                  style={{ color: NGK_COLORS.primarySoft }}
-                                >
-                                  Specify Other Service
-                                </CFormLabel> */}
+                               
                                 <CFormInput
                                   ref={inputRefs.otherServiceName}
                                   placeholder="Enter Service Name"
@@ -1789,6 +1674,15 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                                   }
                                 />
                               </div>
+                            )}
+                            {errors.otherServiceName && (
+                              <p
+                                style={{
+                                  color: 'red',
+                                }}
+                              >
+                                {errors.otherServiceName}
+                              </p>
                             )}
                           </CCol>
                           <div>
@@ -2141,186 +2035,13 @@ export default function NGlowKartPatientRegistration_CoreUI() {
               </CForm>
             )}
           </div>
-          {/* {showAadhaarModal && (
-            <div className="aadhaar-modal-backdrop text-black">
-              <div className="aadhaar-modal">
-                <h2>Aadhaar Consent Notice</h2>
-
-                <div className="aadhaar-modal-content">
-                  <p>
-                    Udit CosmeTech Private Limited (“we”, “us”, “our”), the operator of the mobile
-                    application Neeha’s Glow Kart, is committed to protecting your personal data in
-                    accordance with the Digital Personal Data Protection Act, 2023 (DPDP Act).
-                    <br />
-                    <br />
-                    To ensure genuine, unique, and non-duplicate registrations, we request you to
-                    voluntarily provide your Aadhaar Number for identity verification and
-                    fraud-prevention purposes.
-                    <br />
-                    <br />
-                    Please read the information below carefully before providing your consent.
-                    <br />
-                    <br />
-                    <b>1. Purpose of Collecting Your Aadhaar Number</b>
-                    <br />
-                    Your Aadhaar number is collected solely for the following limited purposes:
-                    <br />
-                    <br />
-                    • To ensure unique and genuine customer registration on Neeha’s Glow Kart.
-                    <br />
-                    • To prevent duplicate accounts, fraudulent sign-ups, misuse of
-                    referral/spin-wheel rewards, or unauthorized benefits.
-                    <br />
-                    • To maintain the integrity and authenticity of users participating in the
-                    platform.
-                    <br />
-                    <br />
-                    We do NOT use Aadhaar for:
-                    <br />
-                    • Marketing
-                    <br />
-                    • Profiling
-                    <br />
-                    • Sharing with clinics, external agencies, or advertisers
-                    <br />
-                    • Any purpose other than identity uniqueness verification
-                    <br />
-                    <br />
-                    <b>2. How Your Aadhaar Information Is Handled</b>
-                    <br />
-                    We follow strict security protocols:
-                    <br />
-                    <br />
-                    • Your Aadhaar number is not stored in readable or plain-text form.
-                    <br />
-                    • Your Aadhaar is immediately converted into a secure one-way cryptographic hash
-                    (SHA-256).
-                    <br />
-                    • Only the hashed value is stored to check uniqueness.
-                    <br />
-                    • The original Aadhaar number is discarded immediately after hashing.
-                    <br />
-                    <br />
-                    We never share, disclose, or transfer your Aadhaar number or hash to any third
-                    party.
-                    <br />
-                    <br />
-                    <b>3. Voluntary Consent</b>
-                    <br />
-                    Providing your Aadhaar number is voluntary but may be required to access certain
-                    features such as:
-                    <br />
-                    <br />
-                    • Registration on an invite-only basis
-                    <br />
-                    • Eligibility for promotional rewards (e.g., spin wheel)
-                    <br />
-                    • Fraud-free participation in offers and benefits
-                    <br />
-                    <br />
-                    <b>4. Your Rights Under the DPDP Act</b>
-                    <br />
-                    You have the right to:
-                    <br />
-                    <br />
-                    • Withdraw your consent at any time
-                    <br />
-                    • Request deletion of your stored hashed Aadhaar identifier
-                    <br />
-                    • Access the details of how your data is processed
-                    <br />
-                    • Submit grievances regarding your personal data
-                    <br />• <a href="mailto:support@ngkderma.com">support@ngkderma.com</a>
-                    <br />
-                    <br />
-                    <b>Contact our Data Protection Officer (DPO):</b>
-                    <br />
-                    Email: support@uditcosmetech.com
-                    <br />
-                    Address: Udit CosmeTech Private Limited, 7/111E, Plot No. 80/1,P&K,Nest, Chil
-                    SEZ IT Park Rd,Coimbatore North, Coimbatore, Tamil Nadu, India - 641035.
-                    <br />
-                    <br />
-                    <b>5. Retention & Deletion Policy</b>
-                    <br />
-                    We retain only the hashed Aadhaar identifier and only as long as required.
-                    <br />
-                    <br />
-                    <b>6. By Proceeding, You Consent to the Following:</b>
-                    <br />
-                    • You voluntarily provide your Aadhaar number.
-                    <br />
-                    • You understand the specific and limited purpose of collection.
-                    <br />
-                    • You agree to its secure hashing and processing.
-                    <br />• You authorize Udit CosmeTech Private Limited to process your data in
-                    accordance with the DPDP Act.
-                  </p>
-                </div>
-
-                <button className="aadhaar-close-btn" onClick={() => setShowAadhaarModal(false)}>
-                  Agree
-                </button>
-              </div>
-            </div>
-          )} */}
+         
 
           <AadhaarConsentModal show={showAadhaarModal} onClose={() => setShowAadhaarModal(false)} />
 
           <UserConsentModal show={showConsentModal} onClose={() => setShowConsentModal(false)} />
 
-          {/* {showConsentModal && (
-            <div className="aadhaar-modal-backdrop">
-              <div className="aadhaar-modal">
-            
-
-                <h2>User Consent Disclaimer</h2>
-
-                <div className="aadhaar-modal-content">
-                  <p>
-                    <b>Neeha’s Glow Kart – Udit CosmeTech Private Limited</b>
-                    <br />
-                    <br />
-                    <b>Disclaimer:</b>
-                    <br />
-                    Neeha’s Glow Kart is a listing and offer-discovery platform only. We do not
-                    provide medical treatments, and we are not responsible for treatment results,
-                    side effects, complications, or service quality at any clinic.
-                    <br />
-                    <br />
-                    All dermatology, skin, hair, cosmetic, and aesthetic procedures involve risks.
-                    <br />
-                    <b>
-                      All treatments are fully and solely the responsibility of the respective
-                      clinic/doctor.
-                    </b>
-                    <br />
-                    <br />
-                    By continuing, you acknowledge and agree that:
-                    <br />
-                    <br />
-                    • You choose to visit or consult a clinic at your own discretion and risk.
-                    <br />
-                    • Neeha’s Glow Kart is not liable for reactions, side effects, dissatisfaction,
-                    or post-treatment issues.
-                    <br />
-                    • You will interact directly with the clinic for medical advice, risks,
-                    aftercare, or disputes.
-                    <br />
-                    • The platform’s role is only to share offers & clinic information provided by
-                    the clinics.
-                    <br />
-                    <br />
-                  </p>
-                </div>
-
-             
-                <button className="aadhaar-close-btn" onClick={() => setShowConsentModal(false)}>
-                  Agree
-                </button>
-              </div>
-            </div>
-          )} */}
+          
         </div>
       </div>
     </div>
