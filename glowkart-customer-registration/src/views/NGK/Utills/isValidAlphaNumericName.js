@@ -38,3 +38,21 @@ export const isOnlyAlphabetsWithSpecialChars = (value) => {
   return hasAlphabet && validChars
 }
 
+export const isValidAddress = (address) => {
+  if (!address) return false
+
+  const trimmed = address.trim()
+
+  // Must contain at least one alphabet
+  const hasAlphabet = /[A-Za-z]/.test(trimmed)
+
+  // Allow letters, numbers, spaces, comma, slash, hyphen
+  const validChars = /^[A-Za-z0-9\s,./-]+$/.test(trimmed)
+
+  // Must have at least 3 words (house no + area + village/city)
+  const wordCount = trimmed.split(/\s+/).length >= 3
+
+  return hasAlphabet && validChars && wordCount
+}
+
+

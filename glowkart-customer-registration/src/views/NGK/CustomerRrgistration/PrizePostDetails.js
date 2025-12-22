@@ -10,9 +10,11 @@ import { NGK_COLORS } from '../../../Constant/Themes'
 import { Row } from 'react-bootstrap'
 import ClipLoader from 'react-spinners/ClipLoader'
 import DermaCareLogo from '../../../assets/images/logoP.png'
+import { isValidAddress } from '../Utills/isValidAlphaNumericName'
 export default function PrizePostDetails({ form, setForm, onSubmit, userData }) {
   const [loadingLocation, setLoadingLocation] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [addressError, setAddressError] = useState('')
 
   // useEffect(() => {
   //   // smooth scroll window (fallback)
@@ -147,9 +149,13 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
         }
       }
 
-      if (!form.address.trim()) {
-        showCustomToast('Address is required!', 'error')
-
+      // if (!isValidAddress(form.address)) {
+      //   showCustomToast('Please enter complete address (House No, Street, Area, Village)', 'error')
+      //   setLoading(false)
+      //   return
+      // }
+      if (!isValidAddress(form.address)) {
+        setAddressError('Please enter complete address (House No, Street, Area, Village)')
         setLoading(false)
         return
       }
@@ -176,7 +182,7 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
       // On success:
       onSubmit()
       navigate('/onboard-success', {
-        state: { name: userData.fullName,data: userData},
+        state: { name: userData.fullName, data: userData },
       })
 
       sessionStorage.removeItem('ngk_session')
@@ -243,16 +249,33 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
           <CRow>
             <CCol md={12} className="mt-2">
               <CFormInput
-                placeholder="Enter your full address"
+                placeholder="House No, Street, Area, Village, Pincode"
                 value={form.address}
-                onChange={(e) => updateForm('address', e.target.value)}
+                onChange={(e) => {
+                  let value = e.target.value
+
+                  // ❌ Block invalid characters
+                  if (!/^[A-Za-z0-9\s,./-]*$/.test(value)) return
+
+                  value = value.replace(/\s+/g, ' ').trimStart()
+
+                  updateForm('address', value)
+
+                  // ✅ Clear error when address becomes valid
+                  if (isValidAddress(value)) {
+                    setAddressError('')
+                  }
+                }}
                 style={{
                   borderRadius: 12,
                   padding: 14,
-                  border: `1px solid ${NGK_COLORS.primarySoft}`,
+                  border: addressError ? '1px solid red' : `1px solid ${NGK_COLORS.primarySoft}`,
                 }}
               />
             </CCol>
+            {addressError && (
+              <p style={{ color: 'red', fontSize: 13, marginTop: 6 }}>{addressError}</p>
+            )}
 
             {/* LOCATION BUTTON */}
             <CCol md={12} className="mt-3 d-flex justify-content-center">
