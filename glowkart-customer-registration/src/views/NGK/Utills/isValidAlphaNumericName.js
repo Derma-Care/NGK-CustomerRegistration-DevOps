@@ -43,16 +43,18 @@ export const isValidAddress = (address) => {
 
   const trimmed = address.trim()
 
-  // Must contain at least one alphabet
+  // Must contain both numbers & letters
+  const hasNumber = /\d/.test(trimmed)
   const hasAlphabet = /[A-Za-z]/.test(trimmed)
 
-  // Allow letters, numbers, spaces, comma, slash, hyphen
+  // Allowed characters
   const validChars = /^[A-Za-z0-9\s,./-]+$/.test(trimmed)
 
-  // Must have at least 3 words (house no + area + village/city)
-  const wordCount = trimmed.split(/\s+/).length >= 3
+  // Split by comma or space
+  const parts = trimmed.split(/[,\s]+/)
 
-  return hasAlphabet && validChars && wordCount
+  // At least 3 meaningful parts (area, city, etc.)
+  const meaningfulParts = parts.filter((part) => part.replace(/[^A-Za-z]/g, '').length >= 3)
+
+  return hasNumber && hasAlphabet && validChars && meaningfulParts.length >= 3
 }
-
-
