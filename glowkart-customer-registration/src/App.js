@@ -1,28 +1,23 @@
-import React, { Suspense, useEffect, } from 'react'
-import {  Route, Routes, Navigate,   } from 'react-router-dom'
- 
-import {   useColorModes } from '@coreui/react'
-import './scss/style.scss'
- 
- 
+import React, { Suspense, useEffect } from 'react'
+import { Route, Routes, Navigate } from 'react-router-dom'
 
- 
- 
- 
+import { useColorModes } from '@coreui/react'
+import './scss/style.scss'
+
 const Page404 = React.lazy(() => import('./views/pages/page404/Page404'))
 const Page500 = React.lazy(() => import('./views/pages/page500/Page500'))
 
- 
 import { injectTheme, NGK_COLORS } from './Constant/Themes'
 import OnboardSuccess from './views/NGK/CustomerRrgistration/OnboardSuccess'
 import NGlowKartPatientRegistration_CoreUI from './views/NGK/CustomerRrgistration/CustomerRegistration'
+import RegistrationFormScreenRefferCode from './views/NGK/CustomerRrgistration/RegistrationFormRefferIdScreen'
 import SpinResultCard from './views/NGK/CustomerRrgistration/SpinResultCard'
 import RegistrationSoon from './views/NGK/CustomerRrgistration/RegistrationSoon'
- 
- 
+
 import DermaCareLogo from './assets/images/logoP.png'
 import { showCustomToast } from './Utils/Toaster'
 import useNetwork from './views/NGK/Utills/networkInterceptor'
+import CustomerRegistrationRefferalCode from './views/NGK/CustomerRrgistration/CustomerRegistrationRefferalCode'
 const App = () => {
   const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
   // const storedTheme = useSelector((state) => state.theme)
@@ -45,8 +40,6 @@ const App = () => {
   useEffect(() => {
     setColorMode('light') // Always force light mode
   }, [])
-
- 
 
   const { online, speed } = useNetwork()
 
@@ -121,6 +114,11 @@ const App = () => {
 
         {/* <Route path="/" element={<SpinResultCard />} /> */}
         <Route path="/onboard-success" element={<OnboardSuccess />} />
+        <Route
+          path="/referral-registration"
+          // eslint-disable-next-line react/jsx-no-undef
+          element={<CustomerRegistrationRefferalCode />}
+        />
         {/* <Route path="/resetPassword" element={<ResetPasswordForm />} /> */}
 
         {/* Protected routes - catch all */}

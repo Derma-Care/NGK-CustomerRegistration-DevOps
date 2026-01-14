@@ -295,17 +295,15 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
             <div
               className="prize-circle"
               style={{
-                width: 120, // Increased container size (optional)
+                width: 120,
                 height: 120,
                 borderRadius: '50%',
-                overflow: 'hidden',
-                padding: 10, // Adds inner space so image isn't cropped
-
-                border: '3px solid #ff2e85',
+                // backgroundColor: '#ffffff', // ✅ White background
+                // border: '3px solid #ff2e85',
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                boxShadow: '0px 4px 10px rgba(0,0,0,0.15)',
+                alignItems: 'center', // ✅ Vertical center
+                justifyContent: 'center', // ✅ Horizontal center
+                // boxShadow: '0px 4px 10px rgba(0,0,0,0.15)',
               }}
             >
               <img
@@ -316,12 +314,16 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
                 }
                 alt="Prize"
                 style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'contain',
+                  maxWidth: '80%', // ✅ Prevent edge touching
+                  maxHeight: '80%',
+                  objectFit: 'contain', // ✅ No crop
+                  display: 'block',
+                  outline: '3px solid #ff2e85',
+                  borderRadius: '25%',
+                  boxShadow: '0px 4px 10px rgba(0,0,0,0.15)',
+                  // border: '3px solid #ff2e85',
                 }}
               />
-              )
             </div>
           </div>
         </CCardBody>
@@ -345,7 +347,7 @@ Thanks to Neha's GlowKart for the amazing surprises! 💖
           delivery address.
         </p>
 
-        <p style={{color:NGK_COLORS.primary}}>[optional]</p>
+        <p style={{ color: NGK_COLORS.primary }}>[optional]</p>
       </div>
 
       {/* Animation Styles */}

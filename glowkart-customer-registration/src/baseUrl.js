@@ -71,8 +71,7 @@ export const payoutlogin = 'payout-login' //done
 export const sendPayoutOtp = 'payout-forgot-password'
 export const resendPayoutOTP = 'payout-resend-otp'
 export const resetPayoutPassword = 'payout-reset-password'
-export const payoutsupdatePassword = 'updatePayoutPassword'  //done
-
+export const payoutsupdatePassword = 'updatePayoutPassword'
 //unwanted
 export const Booking_service_Url = `${wifiUrl}/api/booking`
 export const DeleteBookings = 'getAllBookings'

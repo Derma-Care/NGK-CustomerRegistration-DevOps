@@ -4,7 +4,7 @@ import React from 'react'
 import { CForm, CFormInput, CFormLabel, CFormSelect, CButton, CRow, CCol } from '@coreui/react'
 import Select from 'react-select'
 
-export default function RegistrationFormScreen({
+export default function RegistrationFormScreenRefferCode({
   form,
   setForm,
   errors,
@@ -39,7 +39,7 @@ export default function RegistrationFormScreen({
         {/* HEADER */}
         <div className="header-container">
           <div className="justify-content-start align-items-center d-flex flex-column">
-            <img
+            {/* <img
               src={form.logo}
               alt="logo"
               style={{
@@ -47,7 +47,7 @@ export default function RegistrationFormScreen({
                 borderRadius: 12,
                 objectFit: 'fill',
               }}
-            />
+            /> */}
 
             <h4 className="m-0 fw-bold text-center w-100 gradient-text">Registration</h4>
           </div>
