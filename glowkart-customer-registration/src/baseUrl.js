@@ -5,10 +5,10 @@
 // export let wifiUrl = 'http://3.6.119.57:9090'
 //----------------------------
 // GlowKart
-export let wifiUrl = 'https://glowkartapi.ashokfruit.shop'
+// export let wifiUrl = 'https://glowkartapi.ashokfruit.shop'
 
 // Registration Dev
-// export let wifiUrl = 'http://3.111.202.212:8080'
+export let wifiUrl = 'http://3.111.202.212:8080'
 //-----------------------------
 // Production
 // export let wifiUrl = 'https://api.aesthetech.life'
