@@ -16,3 +16,20 @@ export const registerCustomer = async (formData) => {
     return { success: false, message: 'Server error' }
   }
 }
+
+export const registerCustomerRf = async (formData) => {
+  try {
+    const response = await fetch(`${wifiUrl}/api/customer/referral/register`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+    })
+
+    return await response.json()
+  } catch (err) {
+    console.error('Register API Error:', err)
+    return { success: false, message: 'Server error' }
+  }
+}
