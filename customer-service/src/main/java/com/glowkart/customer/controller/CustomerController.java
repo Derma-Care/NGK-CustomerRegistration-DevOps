@@ -6,12 +6,15 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.glowkart.customer.dto.ApiResponse;
@@ -19,13 +22,13 @@ import com.glowkart.customer.dto.CompleteRegistrationDTO;
 import com.glowkart.customer.dto.CustomerDetailsDTO;
 import com.glowkart.customer.dto.ReferralRegistrationDTO;
 import com.glowkart.customer.dto.SpinWheelDTO;
+import com.glowkart.customer.exception.CustomerNotFoundException;
 import com.glowkart.customer.exception.InvalidInputException;
 import com.glowkart.customer.model.Customer;
 import com.glowkart.customer.repo.CustomerRepository;
 import com.glowkart.customer.service.CustomerService;
 
 import jakarta.validation.Valid;
-import org.springframework.util.StringUtils;
 
 @RestController
 @RequestMapping("/api")
@@ -131,6 +134,7 @@ public class CustomerController {
             .orElse(new ApiResponse<>(false, "Invalid referral ID", null));
     }
 
+    
  // ==================== REGISTER & COMPLETE IN ONE GO ====================
 //    @PostMapping("/customer/register-and-complete")
 //    public ResponseEntity<ApiResponse<Map<String, Object>>> registerAndComplete(
@@ -185,5 +189,23 @@ public class CustomerController {
                 customerService.registerCustomerViaReferral(dto.getReferId(), dto)
         );
     }
+    
+    
+    @PutMapping("/customer/{mobile}/device-token")
+    public ResponseEntity<ApiResponse<Void>> updateDeviceToken(
+            @PathVariable String mobile,
+            @RequestParam String deviceToken) {
+
+        Customer customer = customerRepository.findByMobile(mobile)
+                .orElseThrow(() -> new CustomerNotFoundException("Customer not found"));
+
+        customer.setDeviceToken(deviceToken);
+        customerRepository.save(customer);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Device token updated successfully", null)
+        );
+    }
+
 
 }
