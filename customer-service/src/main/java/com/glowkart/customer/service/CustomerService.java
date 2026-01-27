@@ -20,9 +20,11 @@ import com.glowkart.customer.dto.CityRequestDTO;
 import com.glowkart.customer.dto.CityResponseDTO;
 import com.glowkart.customer.dto.CompleteRegistrationDTO;
 import com.glowkart.customer.dto.CustomerDetailsDTO;
+import com.glowkart.customer.dto.ReferralRegistrationDTO;
 import com.glowkart.customer.dto.SpinWheelDTO;
 import com.glowkart.customer.dto.WalletSummaryDTO;
 import com.glowkart.customer.dto.WheelSliceDto;
+import com.glowkart.customer.enums.RewardReason;
 import com.glowkart.customer.exception.CustomerNotFoundException;
 import com.glowkart.customer.exception.DuplicateAadhaarException;
 import com.glowkart.customer.exception.DuplicateMobileException;
@@ -32,6 +34,7 @@ import com.glowkart.customer.feign.WheelSliceClient;
 import com.glowkart.customer.model.Customer;
 import com.glowkart.customer.repo.CustomerRepository;
 import com.glowkart.customer.util.AadhaarUtils;
+import org.springframework.util.StringUtils;
 
 @Service
 public class CustomerService {
@@ -99,8 +102,8 @@ public class CustomerService {
             log.info("City '{}' already exists in admin-service.", dto.getCity());
         }
 
-        // ==================== Generate Unique ReferId ====================
-        generateAndSetReferId(customer);  // Generate and set the referId
+//        // ==================== Generate Unique ReferId ====================
+//        generateAndSetReferId(customer);  // Generate and set the referId
 
         // Copy the data from DTO to customer object
         copyStep1Fields(dto, customer);
@@ -114,14 +117,26 @@ public class CustomerService {
 
     // Generate and set referId to customer
     private void generateAndSetReferId(Customer customer) {
-        String referId;
+        final int MAX_ATTEMPTS = 20; // extra attempts for safety
+        String referId = null;
+        int attempts = 0;
+
         do {
-            // Generate referId in the format "NGK-" followed by a random 6-character string
-            referId = "NGK-" + generateRandomString(6);
-        } while (customerRepository.findByReferId(referId) != null);  // Ensure it's unique by checking DB
-        
-        customer.setReferId(referId);  // Set the unique referId for the customer
+            // Generate a random 6-character string
+            String randomPart = generateRandomString(6);
+            referId = "NGK-" + randomPart;
+            attempts++;
+
+            if (attempts > MAX_ATTEMPTS) {
+                // Fallback: append timestamp to guarantee uniqueness
+                referId = "NGK-" + System.currentTimeMillis();
+                break;
+            }
+        } while (customerRepository.findByReferId(referId).isPresent());
+
+        customer.setReferId(referId);
     }
+
 
     // Helper method to generate a random alphanumeric string of the specified length
     private String generateRandomString(int length) {
@@ -218,37 +233,60 @@ public class CustomerService {
             String mobile,
             CompleteRegistrationDTO dto) {
 
+        // 1️⃣ Fetch customer
         Customer customer = customerRepository.findByMobile(mobile)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found"));
 
-        if (!customer.isSpinWheelCompleted()) {
-            return new ApiResponse<>(false, "Complete Spin Wheel first!", null);
-        }
-
+        // 2️⃣ Block second-time registration
         if (customer.isRegistrationCompleted()) {
             return new ApiResponse<>(false, "Registration already completed", null);
         }
 
-        // Save address and mark registration complete
+        // 3️⃣ Ensure spin wheel completed
+        if (!customer.isSpinWheelCompleted()) {
+            return new ApiResponse<>(false, "Complete Spin Wheel first!", null);
+        }
+
+        // 4️⃣ First-time registration: update address & mark complete
         customer.setAddress(dto.getAddress());
         customer.setRegistrationCompleted(true);
 
-        // 🎁 Apply registration reward
+        // 🔑 Generate referId AFTER full registration
+        if (customer.getReferId() == null || customer.getReferId().isBlank()) {
+            generateAndSetReferId(customer);
+        }
+
+        // 5️⃣ Apply registration reward (safe: internally prevents duplicates)
         rewardService.applyRegistrationReward(customer);
 
+        // 6️⃣ Apply referral reward (NO boolean checks here)
+        if (StringUtils.hasText(customer.getReferBy())) {
+
+            customerRepository.findByReferId(customer.getReferBy())
+                    .ifPresent(referrer -> {
+
+                        // ❌ Prevent self-referral
+                        if (!referrer.getCustomerId().equals(customer.getCustomerId())) {
+                            rewardService.applyReferralReward(referrer, customer);
+                        }
+                    });
+        }
+
+        // 7️⃣ Save updated customer
         customerRepository.save(customer);
 
-        // Mark registration code as used
+        // 8️⃣ Mark registration code as used
         try {
             registrationService.markCodeUsed(customer.getRegistrationCode());
         } catch (Exception e) {
             log.error("Failed to mark code as used: {}", e.getMessage());
         }
 
-        // Fetch wallet summary
-        WalletSummaryDTO walletSummary = rewardQueryService.getWalletSummary(customer.getMobile());
+        // 9️⃣ Fetch wallet summary
+        WalletSummaryDTO walletSummary =
+                rewardQueryService.getWalletSummary(customer.getMobile());
 
-        // Prepare combined response
+        // 🔟 Prepare response
         Map<String, Object> responseData = Map.of(
                 "customer", customer,
                 "walletSummary", walletSummary
@@ -260,7 +298,6 @@ public class CustomerService {
                 responseData
         );
     }
-
 
 
  // ==================== GET WHEEL SLICES ====================
@@ -309,7 +346,7 @@ public class CustomerService {
             // YES USERS
             if ("male".equalsIgnoreCase(customer.getGender())) {
                 // Male YES users → only slices 10,11,12 (indexes 9,10,11)
-                int[] allowedIndexes = {9, 10, 11};
+                int[] allowedIndexes = {10, 11};
                 int randomIndex = allowedIndexes[(int) (Math.random() * allowedIndexes.length)];
                 return allSlices.get(randomIndex);
             } else {
@@ -331,7 +368,7 @@ public class CustomerService {
             // INTERESTED USERS
             if ("male".equalsIgnoreCase(customer.getGender())) {
                 // Male INTERESTED users → only slices 4,5,6 (indexes 3,4,5) and 10,11,12 (indexes 9,10,11)
-                int[] allowedIndexes = {3, 4, 5, 9, 10, 11};
+                int[] allowedIndexes = {4, 5, 10, 11};
                 int randomIndex = allowedIndexes[(int) (Math.random() * allowedIndexes.length)];
                 return allSlices.get(randomIndex);
             } else {
@@ -519,5 +556,172 @@ public class CustomerService {
             }
         }
     }
+	public ApiResponse<Customer> getCustomerById(String customerId) {
+		Customer customer = customerRepository.findByCustomerId(customerId)
+                .orElseThrow(() -> new CustomerNotFoundException("Customer not found"));
+        return new ApiResponse<>(true, "Customer retrieved successfully", customer);
+	}
+
+
+	@Transactional
+	public void verifyReferId(String referId) {
+	    if (referId == null || referId.isEmpty()) {
+	        return; // skipped referral, nothing to verify
+	    }
+
+	    boolean exists = customerRepository.existsByReferId(referId);
+	    if (!exists) {
+	        throw new InvalidInputException("Invalid referral ID");
+	    }
+	}
+
+	
+	@Transactional
+	public ApiResponse<Map<String, Object>> registerCustomerViaReferral(
+	        String referId,
+	        ReferralRegistrationDTO dto) {
+
+	    Customer referrer = null;
+
+	    // 1️⃣ Validate referral ID if provided
+	    if (StringUtils.hasText(referId)) {
+	        referrer = customerRepository.findByReferId(referId)
+	                .orElseThrow(() -> new InvalidInputException("Invalid referral ID"));
+	    }
+
+	    // 2️⃣ Duplicate checks
+	    checkDuplicateMobile(dto.getMobile(), null);
+	    checkDuplicateAadhar(dto.getAadharNumber(), null);
+
+	    // 3️⃣ Validate service-status based fields
+	    List<String> missingFields = validateReferralFields(dto);
+	    if (!missingFields.isEmpty()) {
+	        throw new InvalidInputException(
+	                "Missing required fields: " + String.join(", ", missingFields));
+	    }
+
+	    // 4️⃣ City handling
+	    if (!cityExists(dto.getCity())) {
+	        try {
+	            adminCityClient.addCity(new CityRequestDTO(dto.getCity()));
+	        } catch (Exception e) {
+	            log.error("Failed to save city {} : {}", dto.getCity(), e.getMessage());
+	        }
+	    }
+
+	    // 5️⃣ Create new customer
+	    Customer customer = new Customer();
+	    customer.setReferBy(referId); // may be null
+	    copyReferralFields(dto, customer);
+	    customer.setUserProfileCompleted(true);
+	    customer.setRegistrationCompleted(true);
+	    customer.setSpinWheelCompleted(false);
+
+	    // 6️⃣ Generate new referId for the customer
+	    generateAndSetReferId(customer);
+
+	    // 7️⃣ Apply registration reward
+	    rewardService.applyRegistrationReward(customer);
+
+	    // Track reward info for response
+	    int registrationReward = RewardReason.REGISTRATION_COMPLETED.getDefaultPoints();
+	    int referralRewardToReferrer = 0;
+
+	    // 8️⃣ Apply referral reward if valid referrer exists
+	    if (referrer != null && !referrer.getMobile().equals(customer.getMobile())) {
+	        rewardService.applyReferralReward(referrer, customer);
+	        referralRewardToReferrer = RewardReason.REFERRAL_BONUS.getDefaultPoints();
+
+	        // Mark that new customer received referral reward (optional)
+//	        customer.setReferralRewardReceived(true);
+	    }
+
+	    // 9️⃣ Save new customer
+	    customerRepository.save(customer);
+
+	    // 1️⃣0️⃣ Prepare wallet summaries
+	    WalletSummaryDTO customerWallet = rewardQueryService.getWalletSummary(customer.getMobile());
+//	    WalletSummaryDTO referrerWallet = null;
+//	    if (referrer != null) {
+//	        referrerWallet = rewardQueryService.getWalletSummary(referrer.getMobile());
+//	    }
+
+	    // 1️⃣1️⃣ Prepare response
+	    Map<String, Object> responseData = Map.of(
+	            "customer", customer,
+	            "walletSummary", customerWallet,
+	            "referralRewardToReferrer", referralRewardToReferrer,
+	            "registrationReward", registrationReward
+//	            "referrerWalletSummary", referrerWallet
+	    );
+
+	    return new ApiResponse<>(
+	            true,
+	            "Registration completed successfully" + (referrer != null ? " via referral" : ""),
+	            responseData
+	    );
+	}
+
+
+	private List<String> validateReferralFields(ReferralRegistrationDTO dto) {
+
+	    List<String> missing = new ArrayList<>();
+
+	    if (dto.getServiceStatus() == 1) {
+	        if (isEmpty(dto.getClinicName())) missing.add("clinicName");
+	        if (isEmpty(dto.getClinicCityArea())) missing.add("clinicCityArea");
+	        if (dto.getDateOfLastVisit() == null) missing.add("dateOfLastVisit");
+	        if (isEmpty(dto.getServiceType())) missing.add("serviceType");
+	        if (isEmpty(dto.getPrescription())) missing.add("prescription");
+	    } else if (dto.getServiceStatus() == 2) {
+	        if (isEmpty(dto.getCategory())) missing.add("category");
+	        if (isEmpty(dto.getConcern())) missing.add("concern");
+	        if (isEmpty(dto.getSkinTone())) missing.add("skinTone");
+	    } else {
+	        throw new InvalidInputException("Invalid serviceStatus value");
+	    }
+
+	    return missing;
+	}
+
+	private void copyReferralFields(ReferralRegistrationDTO dto, Customer customer) {
+
+	    customer.setFullName(dto.getFullName());
+	    customer.setMobile(dto.getMobile());
+	    customer.setCity(normalizeCity(dto.getCity()));
+	    customer.setDob(dto.getDob());
+	    customer.setGender(dto.getGender());
+	    customer.setServiceStatus(dto.getServiceStatus());
+	    customer.setAddress(dto.getAddress());
+
+	    customer.setAadhaarConsent(dto.getAadhaarConsent());
+	    customer.setUserConsent(dto.getUserConsent());
+	    customer.setPrivacyConsent(dto.getPrivacyConsent());
+
+	    if (dto.getServiceStatus() == 1) {
+	        customer.setClinicName(dto.getClinicName());
+	        customer.setClinicCityArea(dto.getClinicCityArea());
+	        customer.setDateOfLastVisit(dto.getDateOfLastVisit());
+	        customer.setServiceType(dto.getServiceType());
+	        customer.setPrescription(dto.getPrescription());
+	    } else {
+	        customer.setCategory(dto.getCategory());
+	        customer.setConcern(dto.getConcern());
+	        customer.setSkinTone(dto.getSkinTone());
+	        customer.setPhoto(dto.getPhoto());
+	    }
+
+	    String salt = AadhaarUtils.generateSalt();
+	    customer.setAadharSalt(salt);
+	    customer.setAadharHash(AadhaarUtils.hashAadhaar(dto.getAadharNumber(), salt));
+	    customer.setAadharPreHash(AadhaarUtils.preHashAadhaar(dto.getAadharNumber()));
+	    customer.setAadharLast4(AadhaarUtils.getLast4Digits(dto.getAadharNumber()));
+	}
+
+
+	private String normalizeCity(String city) {
+	    String c = city.trim().toLowerCase();
+	    return Character.toUpperCase(c.charAt(0)) + c.substring(1);
+	}
 
 }

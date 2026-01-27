@@ -1,7 +1,9 @@
 package com.glowkart.customer.enums;
 
 public enum RewardReason {
-    REGISTRATION_COMPLETED(100);
+    REGISTRATION_COMPLETED(100),  // new customer reward
+    REFERRAL_BONUS(200),          // referrer reward
+    REDEEMED_FOR_BOOKING(0);
 
     private final int defaultPoints;
 
@@ -13,4 +15,3 @@ public enum RewardReason {
         return defaultPoints;
     }
 }
-

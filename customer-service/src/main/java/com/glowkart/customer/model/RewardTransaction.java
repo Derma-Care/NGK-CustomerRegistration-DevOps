@@ -22,4 +22,7 @@ public class RewardTransaction {
     private RewardReason reason;
     private Integer balanceAfter;
     private LocalDateTime createdAt = LocalDateTime.now();
+    
+    private String relatedCustomerId; // the new customer who triggered this referral reward
+
 }
