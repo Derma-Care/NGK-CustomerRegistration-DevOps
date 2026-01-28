@@ -22,21 +22,6 @@ services:
     networks:
       - app-network
 
-  # Admin Service
-  admin-service:
-    build: ./admin-service
-    container_name: admin_servce
-    ports:
-      - "8082:8082"
-    environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/glowkart_admin
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-    depends_on:
-      - mongodb
-      - eureka-server
-    networks:
-      - app-network
-
   # Customer Service
   customer-service:
     build: ./customer-service
@@ -51,22 +36,6 @@ services:
       - eureka-server
     networks:
       - app-network
-
-  # Procedure Service
-  procedure-service:
-    build: ./procedure-service
-    container_name: procedure_service
-    ports:
-      - "8085:8085"
-    environment:
-      - SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/procedure_db
-      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://eureka-server:8761/eureka/
-    depends_on:
-      - mongodb
-      - eureka-server
-    networks:
-      - app-network
-  
 
   # MongoDB
   mongodb:

@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import com.glowkart.customer.dto.WheelSliceDto;
 
-@FeignClient(name = "admin-service", contextId = "wheelSliceClient")
+@FeignClient(name = "admin-service", contextId = "wheelSliceClient",url = "http://35.154.152.61:8080")
 public interface WheelSliceClient {
 
     // Fetch YES wheel slices

@@ -11,7 +11,7 @@ import com.glowkart.customer.dto.ApiResponse;
 import com.glowkart.customer.dto.ClinicPublicDTO;
 import com.glowkart.customer.dto.ClinicRegistrationDTO;
 
-@FeignClient(name = "admin-service", contextId = "stateClient")
+@FeignClient(name = "admin-service", contextId = "stateClient",url = "http://35.154.152.61:8080")
 public interface AdminClinicClient {
 
     @GetMapping("/admin/public/clinics/by-state")

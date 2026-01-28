@@ -25,30 +25,30 @@ spring:
 
       # -------- ROUTES --------
       routes:
-        - id: admin-service
-          uri: lb://admin-service
-          predicates:
-            - Path=/admin/**
+        # - id: admin-service
+        #   uri: lb://admin-service
+        #   predicates:
+        #     - Path=/admin/**
 
-        - id: clinic-admin-service
-          uri: lb://clinicadmin-service
-          predicates:
-            - Path=/clinic-admin/**
+        # - id: clinic-admin-service
+        #   uri: lb://clinicadmin-service
+        #   predicates:
+        #     - Path=/clinic-admin/**
 
         - id: customer-service
           uri: lb://customer-service
           predicates:
             - Path=/api/**
 
-        - id: onboarding-service
-          uri: lb://onboarding-service
-          predicates:
-            - Path=/onboard/**
+        # - id: onboarding-service
+        #   uri: lb://onboarding-service
+        #   predicates:
+        #     - Path=/onboard/**
 
-        - id: procedure-service
-          uri: lb://procedure-service
-          predicates:
-            - Path=/procedures/**
+        # - id: procedure-service
+        #   uri: lb://procedure-service
+        #   predicates:
+        #     - Path=/procedures/**
 
       # ---- IMPORTANT: CORS ----
       globalcors:
