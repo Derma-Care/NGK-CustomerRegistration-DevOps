@@ -11,7 +11,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
 
-@FeignClient(name = "procedure-service" ,url = "http://35.154.152.61:8080")
+// @FeignClient(name = "procedure-service" ,url = "http://35.154.152.61:8080")
+@FeignClient(name = "procedure-service")
 public interface ProcedureServiceClient {
 
     // 1️⃣ All procedures (master list)

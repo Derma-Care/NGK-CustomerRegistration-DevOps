@@ -86,7 +86,7 @@ services:
     ports:
       - "3000:80"
     environment:
-      - HOST=35.154.152.61
+      - HOST=13.127.173.158
       - PORT=3000
       - JAVA_TOOL_OPTIONS=-XX:-UseContainerSupport
     networks:

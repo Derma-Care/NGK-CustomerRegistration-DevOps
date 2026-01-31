@@ -11,7 +11,8 @@ import com.glowkart.customer.dto.ApiResponse;
 import com.glowkart.customer.dto.CityRequestDTO;
 import com.glowkart.customer.dto.CityResponseDTO;
 
-@FeignClient(name = "admin-service", contextId = "cityClient",url = "http://35.154.152.61:8080")
+// @FeignClient(name = "admin-service", contextId = "cityClient",url = "http://35.154.152.61:8080")
+@FeignClient(name = "admin-service", contextId = "cityClient")
 public interface AdminCityClient {
 
     // Fetch all cities

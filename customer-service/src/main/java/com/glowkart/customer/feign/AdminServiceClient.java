@@ -7,7 +7,8 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(name = "admin-service", contextId = "registrationClient",url = "http://35.154.152.61:8080")
+// @FeignClient(name = "admin-service", contextId = "registrationClient",url = "http://35.154.152.61:8080")
+@FeignClient(name = "admin-service", contextId = "registrationClient")
 public interface AdminServiceClient {
 
     @PostMapping("/admin/api/registration/verify")
