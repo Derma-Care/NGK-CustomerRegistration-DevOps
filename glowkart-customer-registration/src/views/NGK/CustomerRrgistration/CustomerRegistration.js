@@ -1,3 +1,5 @@
+/* eslint-disable react/no-unknown-property */
+/* eslint-disable react/no-unescaped-entities */
 import React, { useEffect, useState } from 'react'
 import {
   CForm,

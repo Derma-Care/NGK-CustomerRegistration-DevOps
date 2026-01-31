@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import React from 'react'
 import DermaCareLogo from '../../../assets/images/logoP.png'
 import commingSoonLogo from '../../../assets/images/cs.png'

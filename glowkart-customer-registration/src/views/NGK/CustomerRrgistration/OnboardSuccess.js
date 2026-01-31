@@ -6,13 +6,14 @@ import { CButton } from '@coreui/react'
 import './SpinWheel.css'
 import { NGK_COLORS } from '../../../Constant/Themes'
 import DermaCareLogo from '../../../assets/images/logoP.png'
-export default function OnboardSuccess({ visible = true }) {
+// eslint-disable-next-line react/prop-types
+export default function OnboardSuccess({ visible = true}) {
   const [showInitialConfetti, setShowInitialConfetti] = useState(true)
   const [launchDone, setLaunchDone] = useState(false)
 
   const confettiRef = useRef(null)
   const location = useLocation()
-  const { name, data } = location.state || {} // fallback if undefined
+  const { name, data, isregister = true } = location.state || {} // fallback if undefined
   console.log(location.state)
   console.log(name)
 
@@ -208,10 +209,13 @@ export default function OnboardSuccess({ visible = true }) {
               You're all set — enjoy exploring treatments, booking appointments, and unlocking
               exclusive offers.
             </p>
-            <div className="mb-3">
-              You will receive the gift <strong>({data.spinRewardValue})</strong>. It will be delivered to your
-              registered delivery address within one week.
-            </div>
+
+            {isregister && (
+              <div className="mb-3">
+                You will receive the gift <strong>({data.spinRewardValue})</strong>. It will be
+                delivered to your registered delivery address within one week.
+              </div>
+            )}
 
             <LaunchCountdown onComplete={() => setLaunchDone(true)} />
 

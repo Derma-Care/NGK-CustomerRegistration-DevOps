@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { useEffect, useState } from 'react'
 import { CCard, CCardBody, CButton, CFormInput, CRow, CCol } from '@coreui/react'
 import OnboardSuccess from './OnboardSuccess'
@@ -16,63 +17,12 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
   const [loading, setLoading] = useState(false)
   const [addressError, setAddressError] = useState('')
 
-  // useEffect(() => {
-  //   // smooth scroll window (fallback)
-  //   window.scrollTo({ top: 0, behavior: 'smooth' })
-
-  //   // smooth scroll the scrollable container
-  //   const panel = document.querySelector('.form-panel')
-  //   if (panel) {
-  //     panel.scrollTo({ top: 0, behavior: 'smooth' })
-  //   }
-  // }, [])
-
   const navigate = useNavigate()
   // ------------ UPDATE FORM ------------
   const updateForm = (key, value) => {
     setForm((prev) => ({ ...prev, [key]: value }))
   }
 
-  // ------------ FETCH LOCATION (PROMISE) ------------
-  // const handleGetLocation = () => {
-  //   return new Promise((resolve) => {
-  //     if (!navigator.geolocation) {
-  //       showCustomToast('Location is not supported on this device', 'error')
-
-  //       resolve(false)
-  //       return
-  //     }
-
-  //     setLoadingLocation(true)
-
-  //     navigator.geolocation.getCurrentPosition(
-  //       async (pos) => {
-  //         try {
-  //           const { latitude, longitude } = pos.coords
-  //           const response = await fetch(
-  //             `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json`,
-  //           )
-  //           const data = await response.json()
-
-  //           const readable = data.display_name || `${latitude}, ${longitude}`
-  //           updateForm('address', readable)
-  //         } catch {
-  //           showCustomToast('Unable to fetch address', 'error')
-  //         }
-
-  //         setLoadingLocation(false)
-  //         resolve(true)
-  //       },
-  //       () => {
-  //         setLoadingLocation(false)
-  //         showCustomToast('Location permission denied', 'error')
-
-  //         // alert('Location permission denied')
-  //         resolve(false)
-  //       },
-  //     )
-  //   })
-  // }
   const handleGetLocation = async () => {
     // 1️⃣ Check if user previously blocked permission
     if (navigator.permissions) {
@@ -149,11 +99,6 @@ export default function PrizePostDetails({ form, setForm, onSubmit, userData }) 
         }
       }
 
-      // if (!isValidAddress(form.address)) {
-      //   showCustomToast('Please enter complete address (House No, Street, Area, Village)', 'error')
-      //   setLoading(false)
-      //   return
-      // }
       if (!isValidAddress(form.address)) {
         setAddressError('Please enter complete address (House No, Street, Area, Village)')
         setLoading(false)

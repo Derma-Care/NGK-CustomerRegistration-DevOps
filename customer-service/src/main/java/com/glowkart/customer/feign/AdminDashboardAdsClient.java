@@ -9,7 +9,7 @@ import com.glowkart.customer.dto.DashboardAdsResponseDto;
 
 import java.util.List;
 
-@FeignClient(name = "admin-service", contextId = "dashboardAdsClient")
+@FeignClient(name = "admin-service", contextId = "dashboardAdsClient",url = "http://35.154.152.61:8080")
 
 public interface AdminDashboardAdsClient {
 

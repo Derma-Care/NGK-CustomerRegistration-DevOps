@@ -6,19 +6,26 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.glowkart.customer.dto.ApiResponse;
 import com.glowkart.customer.dto.CompleteRegistrationDTO;
 import com.glowkart.customer.dto.CustomerDetailsDTO;
+import com.glowkart.customer.dto.ReferralRegistrationDTO;
 import com.glowkart.customer.dto.SpinWheelDTO;
+import com.glowkart.customer.exception.CustomerNotFoundException;
+import com.glowkart.customer.exception.InvalidInputException;
 import com.glowkart.customer.model.Customer;
+import com.glowkart.customer.repo.CustomerRepository;
 import com.glowkart.customer.service.CustomerService;
 
 import jakarta.validation.Valid;
@@ -30,6 +37,10 @@ public class CustomerController {
 
     @Autowired
     private CustomerService customerService;
+    
+    @Autowired
+    private CustomerRepository customerRepository;
+
 
     // ==================== STEP 1 ====================
     @PostMapping("/customer/step1")
@@ -87,6 +98,13 @@ public class CustomerController {
                 : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
     
+    @GetMapping("/customer/id/{customerId}")
+    public ResponseEntity<ApiResponse<Customer>> getCustomerId(@PathVariable String customerId) {
+        ApiResponse<Customer> response = customerService.getCustomerById(customerId);
+        return response.isSuccess() ? ResponseEntity.ok(response)
+                : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+    
     // ==================== GET Customer by Registration Code ====================
     @GetMapping("/customer/code/{registrationCode}")
     public ResponseEntity<ApiResponse<Customer>> getCustomerByCode(@PathVariable String registrationCode) {
@@ -109,5 +127,76 @@ public class CustomerController {
                 : ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
     }
     
+    @GetMapping("/customer/referral/{referId}/validate")
+    public ApiResponse<String> validateReferral(@PathVariable String referId) {
+        return customerRepository.findByReferId(referId)
+            .map(c -> new ApiResponse<>(true, "Valid referral ID", c.getFullName()))
+            .orElse(new ApiResponse<>(false, "Invalid referral ID", null));
+    }
+
+   
+
+    @GetMapping("/customer/referral/{referId}/verify")
+    public ResponseEntity<ApiResponse<Void>> verifyReferId(
+            @PathVariable String referId) {
+
+        if (referId == null || referId.isEmpty()) {
+            return ResponseEntity.ok(
+                    new ApiResponse<>(true, "No referral ID provided, skipping verification", null)
+            );
+        }
+
+        customerService.verifyReferId(referId);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Referral ID verified successfully", null)
+        );
+    }
+
+
     
+
+    // Optional referral verification endpoint
+    @PostMapping("/customerv/referral/verify")
+    public ResponseEntity<ApiResponse<Void>> verifyReferId(
+            @RequestBody Map<String, String> body) {
+
+        String referId = body.get("referId");
+        if (!StringUtils.hasText(referId)) {
+            throw new InvalidInputException("referId is required for verification");
+        }
+
+        customerService.verifyReferId(referId);
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Referral ID verified successfully", null)
+        );
+    }
+
+    // Register customer (referId optional)
+    @PostMapping("/customer/referral/register")
+    public ResponseEntity<ApiResponse<Map<String, Object>>> registerViaReferral(
+            @RequestBody @Valid ReferralRegistrationDTO dto) {
+
+        return ResponseEntity.ok(
+                customerService.registerCustomerViaReferral(dto.getReferId(), dto)
+        );
+    }
+    
+    
+    @PutMapping("/customer/{mobile}/device-token")
+    public ResponseEntity<ApiResponse<Void>> updateDeviceToken(
+            @PathVariable String mobile,
+            @RequestParam String deviceToken) {
+
+        Customer customer = customerRepository.findByMobile(mobile)
+                .orElseThrow(() -> new CustomerNotFoundException("Customer not found"));
+
+        customer.setDeviceToken(deviceToken);
+        customerRepository.save(customer);
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(true, "Device token updated successfully", null)
+        );
+    }
+
+
 }

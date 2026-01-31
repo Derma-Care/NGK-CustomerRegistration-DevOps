@@ -84,10 +84,10 @@ services:
     build: ./glowkart-customer-registration
     container_name: glowkart-customer-registration-container
     ports:
-      - "5000:80"
+      - "3000:80"
     environment:
       - HOST=35.154.152.61
-      - PORT=5000
+      - PORT=3000
       - JAVA_TOOL_OPTIONS=-XX:-UseContainerSupport
     networks:
       - app-network
