@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { NGK_COLORS } from '../../../Constant/Themes'
 
-export default function LaunchCountdown({onComplete}) {
+// eslint-disable-next-line react/prop-types
+export default function LaunchCountdown({ onComplete }) {
   const targetDate = new Date('2026-03-08T00:00:00').getTime()
   const [timeLeft, setTimeLeft] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -58,13 +59,18 @@ export default function LaunchCountdown({onComplete}) {
       ) : timeLeft.days !== undefined ? (
         <>
           <h2 style={{ marginBottom: 8, fontSize: 24, fontWeight: 700, color: 'white' }}>
-            🚀 Launching the App Soon
+            App Access Coming Soon!
           </h2>
           <p style={{ fontSize: 16, opacity: 0.9, marginBottom: 20, color: 'white' }}>
-            Going live on <strong>8th March 2026</strong>
+            We’ll be sharing your exclusive app access very soon. You’re officially a{' '}
+            <strong> Basic Member </strong>
+            of Neeha’s GlowKart ✨ Enjoy early features, priority booking & special rewards.
           </p>
+          <strong style={{ fontSize: 16, opacity: 0.9, marginBottom: 20, color: 'white' }}>
+            Stay tuned — access details will be shared shortly.
+          </strong>
 
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
+          {/* <div style={{ display: 'flex', justifyContent: 'center', gap: 10 }}>
             {['days', 'hours', 'minutes', 'seconds'].map((unit) => (
               <div
                 key={unit}
@@ -80,7 +86,7 @@ export default function LaunchCountdown({onComplete}) {
                 <div style={{ fontSize: 12, opacity: 0.8 }}>{unit.toUpperCase()}</div>
               </div>
             ))}
-          </div>
+          </div> */}
         </>
       ) : (
         /* 🎉 Successfully launched */
