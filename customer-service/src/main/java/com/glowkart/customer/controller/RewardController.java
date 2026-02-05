@@ -35,6 +35,23 @@ public class RewardController {
         }
     }
 
+    
+    /**
+     * Credit reward points for a completed booking
+     */
+    @PostMapping("/rewards/{customerId}/credit")
+    public ResponseEntity<ApiResponse<Void>> creditBookingReward(
+            @PathVariable String customerId,
+            @RequestParam int points) {
+
+        try {
+            rewardService.creditBookingReward(customerId, points);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Booking reward credited successfully", null));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
+        }
+    }
+
     /**
      * Get wallet summary for a customer
      * Throws 404 if customer does not exist
