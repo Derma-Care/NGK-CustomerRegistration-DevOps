@@ -114,4 +114,32 @@ public class RewardService {
 
         return tx;
     }
+
+    /**
+     * Credit points to a customer for booking completion
+     */
+    @Transactional
+    public RewardTransaction creditBookingReward(String customerId, int points) {
+        if (points <= 0) throw new IllegalArgumentException("Points to credit must be positive");
+
+        Customer customer = customerRepo.findById(customerId)
+                .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
+
+        int updatedBalance = customer.getRewardPoints() + points;
+        customer.setRewardPoints(updatedBalance);
+        customerRepo.save(customer);
+
+        RewardTransaction tx = new RewardTransaction();
+        tx.setCustomerId(customer.getCustomerId());
+        tx.setMobile(customer.getMobile());
+        tx.setPoints(points);
+        tx.setType(RewardTransactionType.CREDIT);
+        tx.setReason(RewardReason.BOOKING_COMPLETED); // 🔥 new enum
+        tx.setBalanceAfter(updatedBalance);
+
+        rewardRepo.save(tx);
+
+        return tx;
+    }
+
 }
