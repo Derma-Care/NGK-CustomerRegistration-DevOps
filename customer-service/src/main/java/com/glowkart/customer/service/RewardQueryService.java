@@ -1,6 +1,7 @@
 package com.glowkart.customer.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,11 +10,11 @@ import org.springframework.stereotype.Service;
 import com.glowkart.customer.dto.RewardTransactionDTO;
 import com.glowkart.customer.dto.WalletSummaryDTO;
 import com.glowkart.customer.enums.RewardTransactionType;
+import com.glowkart.customer.exception.CustomerNotFoundException;
 import com.glowkart.customer.model.Customer;
 import com.glowkart.customer.model.RewardTransaction;
 import com.glowkart.customer.repo.CustomerRepository;
 import com.glowkart.customer.repo.RewardTransactionRepository;
-import com.glowkart.customer.exception.CustomerNotFoundException;
 
 @Service
 public class RewardQueryService {
@@ -28,78 +29,95 @@ public class RewardQueryService {
      * Get wallet summary for a customer by mobile number
      */
     public WalletSummaryDTO getWalletSummary(String mobile) {
-        // 1️⃣ Check if customer exists
+
         Customer customer = customerRepo.findByMobile(mobile)
                 .orElseThrow(() -> new CustomerNotFoundException(
                         "Customer not found with mobile: " + mobile
                 ));
 
-        // 2️⃣ Calculate total credits
-        int totalCredits = rewardRepo.findByMobileAndType(mobile, RewardTransactionType.CREDIT)
-                                     .stream()
-                                     .mapToInt(RewardTransaction::getPoints)
-                                     .sum();
+        int totalCredits = customer.getRewardPoints();
 
-        // 3️⃣ Calculate total debits
-        int totalDebits = rewardRepo.findByMobileAndType(mobile, RewardTransactionType.DEBIT)
-                                    .stream()
-                                    .mapToInt(RewardTransaction::getPoints)
-                                    .sum();
+        int totalDebits = rewardRepo.findByMobileAndType(
+                mobile, RewardTransactionType.DEBIT)
+                .stream()
+                .mapToInt(RewardTransaction::getPoints)
+                .sum();
 
-        // 4️⃣ Calculate balance
         int balance = totalCredits - totalDebits;
 
-        // 5️⃣ Build WalletSummaryDTO including reward flags
+        String membership = determineMembership(totalCredits);
+        int coinValue = coinValueFor(membership);
+
         return WalletSummaryDTO.builder()
                 .totalCredits(totalCredits)
                 .totalDebits(totalDebits)
                 .balance(balance)
-                .registrationRewardGiven(customer.isRegistrationRewardGiven())
-//                .referralRewardGiven(customer.isReferralRewardGiven())  // or referralRewardReceived if you track referrer
+                .membership(membership)
+                .coinValue(coinValue)
+                .balanceValue(balance * coinValue)
+                .levels(Map.of(
+                        "BASIC", 0,
+                        "SILVER", 200,
+                        "GOLD", 5000,
+                        "PLATINUM", 7500
+                ))
                 .build();
     }
 
 
+    private String determineMembership(int totalCredits) {
+        if (totalCredits >= 7500) return "PLATINUM";
+        if (totalCredits >= 5000) return "GOLD";
+        if (totalCredits >= 200) return "SILVER";
+        return "BASIC";
+    }
+
+    private int coinValueFor(String membership) {
+        switch (membership) {
+            case "PLATINUM": return 4;
+            case "GOLD": return 3;
+            case "SILVER": return 2;
+            default: return 1;
+        }
+    }
+
     /**
      * Get reward transactions with optional filter
-     * @param mobile Customer mobile
-     * @param filter Optional query param: credit | debit | all
      */
     public List<RewardTransactionDTO> getTransactions(String mobile, String filter) {
-        // Check if customer exists
-        Customer customer = customerRepo.findByMobile(mobile)
+
+        // Validate customer
+        customerRepo.findByMobile(mobile)
                 .orElseThrow(() -> new CustomerNotFoundException(
                         "Customer not found with mobile: " + mobile
                 ));
 
-        // Fetch all transactions for this mobile
-        List<RewardTransaction> txs = rewardRepo.findByMobileOrderByCreatedAtDesc(mobile);
+        List<RewardTransaction> txs =
+                rewardRepo.findByMobileOrderByCreatedAtDesc(mobile);
 
-        // Normalize filter string
-        String normalizedFilter = filter == null ? "all" : filter.trim().toLowerCase();
+        String normalizedFilter =
+                filter == null ? "all" : filter.trim().toLowerCase();
 
-        // Filter transactions if requested
         if ("credit".equals(normalizedFilter)) {
             txs = txs.stream()
-                     .filter(t -> t.getType() == RewardTransactionType.CREDIT)
-                     .collect(Collectors.toList());
+                    .filter(t -> t.getType() == RewardTransactionType.CREDIT)
+                    .collect(Collectors.toList());
         } else if ("debit".equals(normalizedFilter)) {
             txs = txs.stream()
-                     .filter(t -> t.getType() == RewardTransactionType.DEBIT)
-                     .collect(Collectors.toList());
+                    .filter(t -> t.getType() == RewardTransactionType.DEBIT)
+                    .collect(Collectors.toList());
         }
-        // else "all" → no filtering
 
-        // Map to DTO
         return txs.stream()
-                  .map(t -> new RewardTransactionDTO(
-                          t.getId(),
-                          t.getPoints(),
-                          t.getType().name(),
-                          t.getReason().name(),
-                          t.getBalanceAfter(),
-                          t.getCreatedAt()
-                  ))
-                  .collect(Collectors.toList());
+                .map(t -> new RewardTransactionDTO(
+                        t.getId(),
+                        t.getPoints(),
+                        t.getType().name(),
+                        t.getReason().name(),
+                        t.getBalanceAfter(),
+                        t.getCreatedAt()
+                ))
+                .collect(Collectors.toList());
     }
+
 }
