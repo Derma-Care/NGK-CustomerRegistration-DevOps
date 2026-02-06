@@ -1,5 +1,8 @@
 package com.glowkart.customer.dto;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -14,6 +17,11 @@ public class WalletSummaryDTO {
     private int totalDebits;
     private int balance;
     
+    private String membership;
+    private int coinValue;
+    private double balanceValue;
+
+    private Map<String, Integer> levels;
     // Optional info for frontend
     private boolean registrationRewardGiven;
     private boolean referralRewardGiven;

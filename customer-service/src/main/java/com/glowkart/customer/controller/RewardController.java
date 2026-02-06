@@ -42,15 +42,15 @@ public class RewardController {
     @PostMapping("/rewards/{customerId}/credit")
     public ResponseEntity<ApiResponse<Void>> creditBookingReward(
             @PathVariable String customerId,
-            @RequestParam int points) {
+            @RequestParam String bookingId,
+            @RequestParam double bookingAmount) {
 
-        try {
-            rewardService.creditBookingReward(customerId, points);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Booking reward credited successfully", null));
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
-        }
+        rewardService.creditBookingReward(customerId, bookingId, bookingAmount);
+        return ResponseEntity.ok(
+            new ApiResponse<>(true, "Booking reward credited successfully", null)
+        );
     }
+
 
     /**
      * Get wallet summary for a customer
