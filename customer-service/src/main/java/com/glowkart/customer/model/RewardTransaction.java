@@ -16,6 +16,7 @@ public class RewardTransaction {
     @Id
     private String id;
     private String customerId;
+    private String bookingId;
     private String mobile;
     private Integer points;
     private RewardTransactionType type;

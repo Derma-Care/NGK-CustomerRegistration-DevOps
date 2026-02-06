@@ -51,31 +51,29 @@ public class RewardService {
     // ==================== Deduct Points ====================
     @Transactional
     public RewardTransaction deductPoints(String customerId, int points) {
-        if (points <= 0) throw new IllegalArgumentException("Points to deduct must be positive");
+
+        if (points <= 0) {
+            throw new IllegalArgumentException("Points to deduct must be positive");
+        }
 
         Customer customer = customerRepo.findById(customerId)
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
 
-        int currentBalance = customer.getRewardPoints();
-        if (points > currentBalance) {
-            throw new IllegalArgumentException("Insufficient reward points");
-        }
-
-        int updatedBalance = currentBalance - points;
-        customer.setRewardPoints(updatedBalance);
-        customerRepo.save(customer);
-
+        // Balance is validated at booking-service level
         RewardTransaction tx = new RewardTransaction();
         tx.setCustomerId(customer.getCustomerId());
         tx.setMobile(customer.getMobile());
         tx.setPoints(points);
         tx.setType(RewardTransactionType.DEBIT);
         tx.setReason(RewardReason.REDEEMED_FOR_BOOKING);
-        tx.setBalanceAfter(updatedBalance);
+
+        // balanceAfter is OPTIONAL / derived
+        tx.setBalanceAfter(0); // or remove this column entirely
 
         rewardRepo.save(tx);
         return tx;
     }
+
     
     // ==================== Apply Referral Reward ====================
     @Transactional
@@ -119,27 +117,63 @@ public class RewardService {
      * Credit points to a customer for booking completion
      */
     @Transactional
-    public RewardTransaction creditBookingReward(String customerId, int points) {
-        if (points <= 0) throw new IllegalArgumentException("Points to credit must be positive");
+    public RewardTransaction creditBookingReward(
+            String customerId,
+            String bookingId,
+            double bookingAmount) {
+
+        // Idempotency
+        if (rewardRepo.existsByBookingIdAndReason(
+                bookingId, RewardReason.BOOKING_COMPLETED)) {
+            return null;
+        }
 
         Customer customer = customerRepo.findById(customerId)
                 .orElseThrow(() -> new IllegalArgumentException("Customer not found"));
 
-        int updatedBalance = customer.getRewardPoints() + points;
+        // 🔑 TOTAL CREDITS BEFORE THIS BOOKING
+        int totalCreditsBefore = customer.getRewardPoints();
+
+        // Base points (₹100 = 1 point)
+        int basePoints = (int) (bookingAmount / 100);
+
+        // 🔥 MULTIPLIER BASED ON PREVIOUS TOTAL
+        int earnedPoints;
+        if (totalCreditsBefore >= 7500) {
+            earnedPoints = basePoints * 4; // PLATINUM
+        } else if (totalCreditsBefore >= 5000) {
+            earnedPoints = basePoints * 3; // GOLD
+        } else if (totalCreditsBefore >= 200) {
+            earnedPoints = basePoints * 2; // SILVER
+        } else {
+            earnedPoints = basePoints;     // BASIC
+        }
+
+        int updatedBalance = totalCreditsBefore + earnedPoints;
+
         customer.setRewardPoints(updatedBalance);
         customerRepo.save(customer);
 
         RewardTransaction tx = new RewardTransaction();
-        tx.setCustomerId(customer.getCustomerId());
+        tx.setCustomerId(customerId);
+        tx.setBookingId(bookingId);
         tx.setMobile(customer.getMobile());
-        tx.setPoints(points);
+        tx.setPoints(earnedPoints);
         tx.setType(RewardTransactionType.CREDIT);
-        tx.setReason(RewardReason.BOOKING_COMPLETED); // 🔥 new enum
+        tx.setReason(RewardReason.BOOKING_COMPLETED);
         tx.setBalanceAfter(updatedBalance);
 
         rewardRepo.save(tx);
 
         return tx;
     }
+
+
+    // ==================== POINT CALCULATION ====================
+    private int calculateEarnedPoints(double bookingAmount) {
+        // ₹100 = 1 point
+        return (int) (bookingAmount / 100);
+    }
+
 
 }

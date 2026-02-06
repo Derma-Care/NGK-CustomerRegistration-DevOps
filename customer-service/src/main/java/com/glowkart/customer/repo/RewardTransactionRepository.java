@@ -12,4 +12,5 @@ public interface RewardTransactionRepository extends MongoRepository<RewardTrans
     List<RewardTransaction> findByMobileOrderByCreatedAtDesc(String mobile);
     List<RewardTransaction> findByMobileAndType(String mobile, RewardTransactionType type);
 	boolean existsByCustomerIdAndReason(String customerId, RewardReason registrationCompleted);
+	boolean existsByBookingIdAndReason(String bookingId, RewardReason bookingCompleted);
 }
