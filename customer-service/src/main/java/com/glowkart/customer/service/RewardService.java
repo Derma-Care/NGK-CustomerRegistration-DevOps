@@ -1,5 +1,7 @@
 package com.glowkart.customer.service;
 
+import java.util.ArrayList;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -7,11 +9,10 @@ import org.springframework.transaction.annotation.Transactional;
 import com.glowkart.customer.enums.RewardReason;
 import com.glowkart.customer.enums.RewardTransactionType;
 import com.glowkart.customer.model.Customer;
+import com.glowkart.customer.model.ReferredCustomerInfo;
 import com.glowkart.customer.model.RewardTransaction;
 import com.glowkart.customer.repo.CustomerRepository;
 import com.glowkart.customer.repo.RewardTransactionRepository;
-
-import java.util.ArrayList;
 
 @Service
 public class RewardService {
@@ -75,30 +76,45 @@ public class RewardService {
     }
 
     
-    // ==================== Apply Referral Reward ====================
+ // ==================== Apply Referral Reward ====================
     @Transactional
     public RewardTransaction applyReferralReward(Customer referrer, Customer newCustomer) {
-        if (referrer == null || newCustomer == null) return null;
 
-        // Initialize referredCustomerIds if null
-        if (referrer.getReferredCustomerIds() == null) {
-            referrer.setReferredCustomerIds(new ArrayList<>());
-        }
-
-        // Avoid double reward for the same referral
-        if (referrer.getReferredCustomerIds().contains(newCustomer.getCustomerId())) {
+        if (referrer == null || newCustomer == null) {
             return null;
         }
 
+        // Initialize list if null
+        if (referrer.getReferredCustomers() == null) {
+            referrer.setReferredCustomers(new ArrayList<>());
+        }
+
+        // 🔒 Prevent duplicate referral reward
+        boolean alreadyReferred = referrer.getReferredCustomers().stream()
+                .anyMatch(rc -> rc.getCustomerId().equals(newCustomer.getCustomerId()));
+
+        if (alreadyReferred) {
+            return null;
+        }
+
+        // Calculate reward
         int points = RewardReason.REFERRAL_BONUS.getDefaultPoints();
         int updatedBalance = referrer.getRewardPoints() + points;
 
-        // Update referrer
+        // Update referrer balance
         referrer.setRewardPoints(updatedBalance);
-        referrer.getReferredCustomerIds().add(newCustomer.getCustomerId());
+
+        // ✅ Add referred customer info (ID + Name)
+        ReferredCustomerInfo referredInfo = new ReferredCustomerInfo();
+        referredInfo.setCustomerId(newCustomer.getCustomerId());
+        referredInfo.setFullName(newCustomer.getFullName());
+
+        referrer.getReferredCustomers().add(referredInfo);
+
+        // Save referrer
         customerRepo.save(referrer);
 
-        // Save transaction
+        // Save reward transaction
         RewardTransaction tx = new RewardTransaction();
         tx.setCustomerId(referrer.getCustomerId());
         tx.setMobile(referrer.getMobile());
@@ -106,12 +122,17 @@ public class RewardService {
         tx.setType(RewardTransactionType.CREDIT);
         tx.setReason(RewardReason.REFERRAL_BONUS);
         tx.setBalanceAfter(updatedBalance);
+
+        // Store referral details in transaction as well
         tx.setRelatedCustomerId(newCustomer.getCustomerId());
+        tx.setRelatedCustomerName(newCustomer.getFullName());
 
         rewardRepo.save(tx);
 
         return tx;
     }
+
+
 
     /**
      * Credit points to a customer for booking completion

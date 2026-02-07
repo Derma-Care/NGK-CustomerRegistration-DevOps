@@ -102,6 +102,17 @@ export default function CustomerRegistrationRefferalCode() {
     fetchProcedures()
   }, [])
 
+  useEffect(() => {
+  fetchCities()
+}, [])
+
+useEffect(() => {
+  if (cityOptions.length === 0) {
+    fetchCities()
+  }
+}, [])
+
+
   const [form, setForm] = useState({
     fullName: '',
     mobile: '',
@@ -246,17 +257,17 @@ export default function CustomerRegistrationRefferalCode() {
     }
   }
 
-  const hasFetchedRef = React.useRef(false)
+  // const hasFetchedRef = React.useRef(false)
 
-  if (!hasFetchedRef.current) {
-    const navEntry = performance.getEntriesByType('navigation')[0]
+  // if (!hasFetchedRef.current) {
+  //   const navEntry = performance.getEntriesByType('navigation')[0]
 
-    if (navEntry?.type === 'reload') {
-      fetchCities()
-    }
+  //   if (navEntry?.type === 'reload') {
+  //     fetchCities()
+  //   }
 
-    hasFetchedRef.current = true
-  }
+  //   hasFetchedRef.current = true
+  // }
 
   function isValidDDMMYYYY(dateStr) {
     if (!/^\d{2}\/\d{2}\/\d{4}$/.test(dateStr)) return false

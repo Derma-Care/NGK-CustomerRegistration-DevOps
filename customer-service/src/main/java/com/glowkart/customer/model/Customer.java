@@ -108,7 +108,7 @@ public class Customer {
  // Add this field to track which referred customers have been rewarded
 //    private Set<String> referredCustomerIds = new HashSet<>();
  // For tracking referral rewards
-    private List<String> referredCustomerIds = new ArrayList<>();
+    private List<ReferredCustomerInfo> referredCustomers = new ArrayList<>();
 
 
     public String getAadharNumber() {
