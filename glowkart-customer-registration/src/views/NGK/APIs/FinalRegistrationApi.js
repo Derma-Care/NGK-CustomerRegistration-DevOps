@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { Booking_sevice, Customer_URL, wifiUrl } from '../../../baseUrl'
+import { Customer_URL, wifiUrl } from '../../../baseUrl'
 import { http } from '../../../Utils/Interceptors'
 
 export const updateStep2 = async (mobile, payload) => {
