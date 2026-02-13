@@ -122,7 +122,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     blood: '',
     registraionCode: '',
     // referBy: '',
-    Aadhar: '',
+    // Aadhar: '',
     prescription: '',
     referBy: "Neha's GlowKart",
     otherServiceName: '',
@@ -143,7 +143,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
     problemDescription: [],
     skinTone: '',
     samplePhoto: '',
-    aadhaarConsent: false,
+    // aadhaarConsent: false,
     userConsent: false,
     privacyConsent: false,
   })
@@ -421,7 +421,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       }
     }
 
-    if (!/^\d{12}$/.test(form.Aadhar)) e.Aadhar = 'Enter a valid 12-digit Aadhaar number'
+    // if (!/^\d{12}$/.test(form.Aadhar)) e.Aadhar = 'Enter a valid 12-digit Aadhaar number'
 
     if (!form.dob) {
       e.dob = 'Date of birth is required'
@@ -503,8 +503,8 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       if (!form.skinTone) e.skinTone = 'Please select your skin tone'
     }
 
-    if (!form.aadhaarConsent)
-      e.aadhaarConsent = 'You must accept Aadhaar consent before submitting.'
+    // if (!form.aadhaarConsent)
+    //   e.aadhaarConsent = 'You must accept Aadhaar consent before submitting.'
 
     if (!form.userConsent) e.userConsent = 'You must agree to the User Consent Disclaimer.'
 
@@ -516,7 +516,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
   const inputRefs = {
     fullName: React.useRef(null),
     mobile: React.useRef(null),
-    Aadhar: React.useRef(null),
+    // Aadhar: React.useRef(null),
     dob: React.useRef(null),
     city: React.useRef(null),
     cityOther: React.useRef(null),
@@ -570,7 +570,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
       blood: form.blood,
       registrationCode: form.registraionCode || sessionStorage.getItem('registraionCode'),
       referBy: form.referBy,
-      aadharNumber: form.Aadhar,
+      // aadharNumber: form.Aadhar,
       prescription: form.prescription, // File or text
       // referBy: form.referBy,
       gender: form.gender,
@@ -582,7 +582,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
         form.interestCategory === 'Other' ? form.otherInterestCategory : form.interestCategory,
       skinTone: form.skinTone === 'other' ? form.skinToneOther : form.skinTone,
       photo: form.samplePhoto,
-      aadhaarConsent: form.aadhaarConsent,
+      // aadhaarConsent: form.aadhaarConsent,
       userConsent: form.userConsent,
       privacyConsent: form.privacyConsent,
     }
@@ -601,9 +601,10 @@ export default function NGlowKartPatientRegistration_CoreUI() {
         const backendMessage = result.message || 'Something went wrong'
         if (backendMessage.toLowerCase().includes('mobile')) {
           newErrors.mobile = backendMessage
-        } else if (backendMessage.toLowerCase().includes('aadhaar')) {
-          newErrors.Aadhar = backendMessage
         }
+        // else if (backendMessage.toLowerCase().includes('aadhaar')) {
+        //   newErrors.Aadhar = backendMessage
+        // }
         setErrors(newErrors)
         scrollToFirstError(newErrors)
         showCustomToast(`${result.message}` || '❌ Registration failed!', 'error')
@@ -645,7 +646,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
     if (!form.userConsent) missing.push('User Consent Disclaimer')
     if (!form.privacyConsent) missing.push('Privacy Policy')
-    if (!form.aadhaarConsent) missing.push('Aadhaar Consent')
+    // if (!form.aadhaarConsent) missing.push('Aadhaar Consent')
 
     if (missing.length > 0) {
       setServiceStatusError(`Please agree to: ${missing.join(', ')}.`)
@@ -1289,7 +1290,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
 
                       {/* {errors.city && <p style={{ color: '#ff2e85' }}>{errors.city}</p>} */}
 
-                      <CCol md={6}>
+                      {/* <CCol md={6}>
                         <CFormLabel
                           className="label-gradient "
                           style={{ color: NGK_COLORS.primarySoft }}
@@ -1315,13 +1316,13 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                                   'error',
                                 )
 
-                                // highlight consent section
+                               
                                 setHighlightAadhaarConsent(true)
 
-                                // remove highlight after 2 seconds
+                                
                                 setTimeout(() => setHighlightAadhaarConsent(false), 2000)
 
-                                // move user to consent section
+                                
                                 inputRefs.aadhaarConsent?.current?.scrollIntoView({
                                   behavior: 'smooth',
                                   block: 'center',
@@ -1368,8 +1369,8 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                           </p>
                         )}
 
-                        {/* Error */}
-                      </CCol>
+                        
+                      </CCol> */}
                       <CCol md={12} style={{ marginTop: '20px' }}>
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
                           {/* Checkbox */}
@@ -1474,7 +1475,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                         </p>
                       )}
 
-                      <CCol md={12}>
+                      {/* <CCol md={12}>
                         <div>
                           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                             <input
@@ -1496,9 +1497,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                               }}
                               onChange={(e) => {
                                 setForm((prev) => ({ ...prev, aadhaarConsent: e.target.checked }))
-                                // setForm({ ...form, aadhaarConsent: e.target.checked })
-
-                                // remove error when checked
+                     
                                 if (e.target.checked) {
                                   setErrors((prev) => ({ ...prev, aadhaarConsent: '' }))
                                   setServiceStatusError('')
@@ -1524,14 +1523,14 @@ export default function NGlowKartPatientRegistration_CoreUI() {
                             </div>
                           </div>
 
-                          {/* ERROR MESSAGE */}
+                 
                           {errors.aadhaarConsent && (
                             <p style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>
                               {errors.aadhaarConsent}
                             </p>
                           )}
                         </div>
-                      </CCol>
+                      </CCol> */}
                       {serviceStatusError && (
                         <p style={{ color: 'red', marginTop: '5px', fontSize: '14px' }}>
                           {serviceStatusError}
@@ -2146,7 +2145,7 @@ export default function NGlowKartPatientRegistration_CoreUI() {
             )}
           </div>
 
-          <AadhaarConsentModal show={showAadhaarModal} onClose={() => setShowAadhaarModal(false)} />
+          {/* <AadhaarConsentModal show={showAadhaarModal} onClose={() => setShowAadhaarModal(false)} /> */}
 
           <UserConsentModal show={showConsentModal} onClose={() => setShowConsentModal(false)} />
         </div>
