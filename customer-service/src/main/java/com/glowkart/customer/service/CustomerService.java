@@ -440,26 +440,59 @@ public class CustomerService {
     }
 
  // ==================== CRUD ====================
+//    public ApiResponse<List<Customer>> getAllCustomers() {
+//        List<Customer> customers = customerRepository.findAll();
+//
+//        // Filter only those customers where userProfileCompleted is true
+//        List<Customer> completedUsers = customers.stream()
+//                .filter(Customer::isUserProfileCompleted)
+//                .toList(); // or collect(Collectors.toList()) in older Java
+//
+//        if (completedUsers.isEmpty()) 
+//            return new ApiResponse<>(false, "No completed customers found", null);
+//
+//        return new ApiResponse<>(true, "Completed customers retrieved successfully", completedUsers);
+//    }
+
     public ApiResponse<List<Customer>> getAllCustomers() {
+
         List<Customer> customers = customerRepository.findAll();
 
-        // Filter only those customers where userProfileCompleted is true
         List<Customer> completedUsers = customers.stream()
                 .filter(Customer::isUserProfileCompleted)
-                .toList(); // or collect(Collectors.toList()) in older Java
+                .toList();
 
-        if (completedUsers.isEmpty()) 
+        if (completedUsers.isEmpty())
             return new ApiResponse<>(false, "No completed customers found", null);
 
-        return new ApiResponse<>(true, "Completed customers retrieved successfully", completedUsers);
+        // 🔥 Attach wallet summary for each customer
+        completedUsers.forEach(customer -> {
+            WalletSummaryDTO walletSummary =
+                    rewardQueryService.getWalletSummary(customer.getMobile());
+            customer.setWalletSummary(walletSummary);
+        });
+
+        return new ApiResponse<>(true,
+                "Completed customers retrieved successfully",
+                completedUsers);
     }
 
 
     public ApiResponse<Customer> getCustomer(String mobile) {
+
         Customer customer = customerRepository.findByMobile(mobile)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found"));
+
+        // 🔥 Fetch wallet summary
+        WalletSummaryDTO walletSummary =
+                rewardQueryService.getWalletSummary(customer.getMobile());
+
+        // 🔥 Set into transient field
+        customer.setWalletSummary(walletSummary);
+
         return new ApiResponse<>(true, "Customer retrieved successfully", customer);
     }
+
 
     public ApiResponse<Customer> getCustomerByRegistrationCode(String code) {
         Customer customer = customerRepository.findByRegistrationCode(code);
