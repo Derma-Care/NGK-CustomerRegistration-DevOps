@@ -51,12 +51,12 @@ public class CustomerRegisterDTO {
     private String registrationCode;
     private String referBy;
 
-    @NotBlank(message = "aadharNumber is required")
-    @Pattern(regexp = "^[0-9]{12}$", message = "aadharNumber must be a valid 12-digit number")
-    private String aadharNumber;
+    // @NotBlank(message = "aadharNumber is required")
+    // @Pattern(regexp = "^[0-9]{12}$", message = "aadharNumber must be a valid 12-digit number")
+    // private String aadharNumber;
 
-    @AssertTrue(message = "Aadhaar consent is required")
-    private Boolean aadhaarConsent;
+    // @AssertTrue(message = "Aadhaar consent is required")
+    // private Boolean aadhaarConsent;
     
     @AssertTrue(message = "User consent is required")
     private Boolean userConsent;

@@ -12,7 +12,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.glowkart.customer.dto.WalletSummaryDTO;
-import com.glowkart.customer.util.AadhaarUtils;
+//import com.glowkart.customer.util.AadhaarUtils;
 
 import lombok.Data;
 
@@ -67,19 +67,19 @@ public class Customer {
 
     
     // Aadhaar
-    @JsonIgnore
-    @Indexed(unique = true)
-    private String aadharHash;
+    // @JsonIgnore
+    // @Indexed(unique = true)
+    // private String aadharHash;
 
-    @JsonIgnore
-    private String aadharSalt;
+    // @JsonIgnore
+    // private String aadharSalt;
 
-    @JsonIgnore
-    private String aadharLast4;
+    // @JsonIgnore
+    // private String aadharLast4;
 
-    @JsonIgnore
-    @Indexed
-    private String aadharPreHash;
+    // @JsonIgnore
+    // @Indexed
+    // private String aadharPreHash;
 
     // Wheel fields
     private String spinRewardId;
@@ -111,8 +111,8 @@ public class Customer {
     private List<ReferredCustomerInfo> referredCustomers = new ArrayList<>();
 
 
-    public String getAadharNumber() {
-        if (aadharLast4 == null) return null;
-        return AadhaarUtils.maskAadhaar(aadharLast4);
-    }
+    // public String getAadharNumber() {
+    //     if (aadharLast4 == null) return null;
+    //     return AadhaarUtils.maskAadhaar(aadharLast4);
+    // }
 }

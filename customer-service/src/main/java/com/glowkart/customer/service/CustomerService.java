@@ -33,7 +33,7 @@ import com.glowkart.customer.feign.AdminCityClient;
 import com.glowkart.customer.feign.WheelSliceClient;
 import com.glowkart.customer.model.Customer;
 import com.glowkart.customer.repo.CustomerRepository;
-import com.glowkart.customer.util.AadhaarUtils;
+//import com.glowkart.customer.util.AadhaarUtils;
 import org.springframework.util.StringUtils;
 
 @Service
@@ -81,7 +81,7 @@ public class CustomerService {
 
         // Check for duplicates and validation (existing functionality)
         checkDuplicateMobile(dto.getMobile(), customer.getMobile());
-        checkDuplicateAadhar(dto.getAadharNumber(), customer.getMobile());
+//        checkDuplicateAadhar(dto.getAadharNumber(), customer.getMobile());
 
         List<String> missingFields = validateStep1Fields(dto);
         if (!missingFields.isEmpty()) {
@@ -447,7 +447,7 @@ public class CustomerService {
         }
 
         // Consent checks
-        if (dto.getAadhaarConsent() == null || !dto.getAadhaarConsent()) missingFields.add("aadhaarConsent");
+//        if (dto.getAadhaarConsent() == null || !dto.getAadhaarConsent()) missingFields.add("aadhaarConsent");
         if (dto.getUserConsent() == null || !dto.getUserConsent()) missingFields.add("userConsent");
         if (dto.getPrivacyConsent() == null || !dto.getPrivacyConsent()) missingFields.add("privacyConsent");
 
@@ -487,7 +487,7 @@ public class CustomerService {
         customer.setGender(dto.getGender());
 
         // New consents
-        customer.setAadhaarConsent(dto.getAadhaarConsent());
+//        customer.setAadhaarConsent(dto.getAadhaarConsent());
         customer.setUserConsent(dto.getUserConsent());
         customer.setPrivacyConsent(dto.getPrivacyConsent());
 
@@ -504,20 +504,20 @@ public class CustomerService {
             customer.setPhoto(dto.getPhoto());
         }
 
-        // Aadhaar handling
-        if (dto.getAadharNumber() != null && !dto.getAadharNumber().isBlank()) {
-            String salt = AadhaarUtils.generateSalt();
-            String hash = AadhaarUtils.hashAadhaar(dto.getAadharNumber(), salt);
-            String preHash = AadhaarUtils.preHashAadhaar(dto.getAadharNumber());
-            String last4 = AadhaarUtils.getLast4Digits(dto.getAadharNumber());
-
-            customer.setAadharSalt(salt);
-            customer.setAadharHash(hash);
-            customer.setAadharPreHash(preHash);
-            customer.setAadharLast4(last4);
-        } else {
-            customer.setAadharPreHash(AadhaarUtils.randomPreHash());
-        }
+//        // Aadhaar handling
+//        if (dto.getAadharNumber() != null && !dto.getAadharNumber().isBlank()) {
+//            String salt = AadhaarUtils.generateSalt();
+//            String hash = AadhaarUtils.hashAadhaar(dto.getAadharNumber(), salt);
+//            String preHash = AadhaarUtils.preHashAadhaar(dto.getAadharNumber());
+//            String last4 = AadhaarUtils.getLast4Digits(dto.getAadharNumber());
+//
+//            customer.setAadharSalt(salt);
+//            customer.setAadharHash(hash);
+//            customer.setAadharPreHash(preHash);
+//            customer.setAadharLast4(last4);
+//        } else {
+//            customer.setAadharPreHash(AadhaarUtils.randomPreHash());
+//        }
     }
 
 
@@ -532,30 +532,30 @@ public class CustomerService {
                 });
     }
 
-    private void checkDuplicateAadhar(String aadhaar, String excludeMobile) {
-        if (aadhaar == null || aadhaar.isBlank()) return;
+//    private void checkDuplicateAadhar(String aadhaar, String excludeMobile) {
+//        if (aadhaar == null || aadhaar.isBlank()) return;
+//
+//        String preHash = AadhaarUtils.preHashAadhaar(aadhaar);
+//        String last4 = AadhaarUtils.getLast4Digits(aadhaar);
+//
+//        List<Customer> candidates = customerRepository.findByAadharPreHashIn(List.of(preHash));
+//
+//        for (Customer c : candidates) {
+//            if (Objects.equals(c.getMobile(), excludeMobile)) continue;
 
-        String preHash = AadhaarUtils.preHashAadhaar(aadhaar);
-        String last4 = AadhaarUtils.getLast4Digits(aadhaar);
-
-        List<Customer> candidates = customerRepository.findByAadharPreHashIn(List.of(preHash));
-
-        for (Customer c : candidates) {
-            if (Objects.equals(c.getMobile(), excludeMobile)) continue;
-
-            if (c.getAadharHash() != null && c.getAadharSalt() != null) {
-                String computedHash = AadhaarUtils.hashAadhaar(aadhaar, c.getAadharSalt());
-                if (AadhaarUtils.constantTimeEquals(computedHash, c.getAadharHash())) {
-                    throw new DuplicateAadhaarException("Aadhaar number already exists");
-                }
-            } else {
-                // fallback: legacy pre-hash check
-                if (c.getAadharPreHash().equals(AadhaarUtils.secureLegacyPreHash(last4, c.getAadharSalt()))) {
-                    throw new DuplicateAadhaarException("Aadhaar number already exists (legacy user)");
-                }
-            }
-        }
-    }
+//            if (c.getAadharHash() != null && c.getAadharSalt() != null) {
+//                String computedHash = AadhaarUtils.hashAadhaar(aadhaar, c.getAadharSalt());
+//                if (AadhaarUtils.constantTimeEquals(computedHash, c.getAadharHash())) {
+//                    throw new DuplicateAadhaarException("Aadhaar number already exists");
+//                }
+//            } else {
+//                // fallback: legacy pre-hash check
+//                if (c.getAadharPreHash().equals(AadhaarUtils.secureLegacyPreHash(last4, c.getAadharSalt()))) {
+//                    throw new DuplicateAadhaarException("Aadhaar number already exists (legacy user)");
+//                }
+//            }
+//        }
+//    }
 	public ApiResponse<Customer> getCustomerById(String customerId) {
 		Customer customer = customerRepository.findByCustomerId(customerId)
                 .orElseThrow(() -> new CustomerNotFoundException("Customer not found"));
@@ -591,7 +591,7 @@ public class CustomerService {
 
 	    // 2️⃣ Duplicate checks
 	    checkDuplicateMobile(dto.getMobile(), null);
-	    checkDuplicateAadhar(dto.getAadharNumber(), null);
+//	    checkDuplicateAadhar(dto.getAadharNumber(), null);
 
 	    // 3️⃣ Validate service-status based fields
 	    List<String> missingFields = validateReferralFields(dto);
@@ -694,7 +694,7 @@ public class CustomerService {
 	    customer.setServiceStatus(dto.getServiceStatus());
 	    customer.setAddress(dto.getAddress());
 
-	    customer.setAadhaarConsent(dto.getAadhaarConsent());
+//	    customer.setAadhaarConsent(dto.getAadhaarConsent());
 	    customer.setUserConsent(dto.getUserConsent());
 	    customer.setPrivacyConsent(dto.getPrivacyConsent());
 
@@ -711,11 +711,11 @@ public class CustomerService {
 	        customer.setPhoto(dto.getPhoto());
 	    }
 
-	    String salt = AadhaarUtils.generateSalt();
-	    customer.setAadharSalt(salt);
-	    customer.setAadharHash(AadhaarUtils.hashAadhaar(dto.getAadharNumber(), salt));
-	    customer.setAadharPreHash(AadhaarUtils.preHashAadhaar(dto.getAadharNumber()));
-	    customer.setAadharLast4(AadhaarUtils.getLast4Digits(dto.getAadharNumber()));
+//	    String salt = AadhaarUtils.generateSalt();
+//	    customer.setAadharSalt(salt);
+//	    customer.setAadharHash(AadhaarUtils.hashAadhaar(dto.getAadharNumber(), salt));
+//	    customer.setAadharPreHash(AadhaarUtils.preHashAadhaar(dto.getAadharNumber()));
+//	    customer.setAadharLast4(AadhaarUtils.getLast4Digits(dto.getAadharNumber()));
 	}
 
 
