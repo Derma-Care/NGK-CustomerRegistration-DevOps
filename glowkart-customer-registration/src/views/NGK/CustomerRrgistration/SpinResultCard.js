@@ -106,7 +106,7 @@ export default function SpinResultCard({ prize, onReset, setInstagram, form, use
     try {
       setLoading(true)
 
-      const caption = `I just won ${finalPrize.spinRewardValue} an exciting gift from Neha's GlowKart! 🎁✨
+      const caption = `I just won ${finalPrize.spinRewardValue} an exciting gift from Neeha's GlowKart! 🎁✨
 Thanks to Neha's GlowKart for the amazing surprises! 💖
 #nkgderma #GlowKartWinner #GlowKartGifts #LuckySpin`
 

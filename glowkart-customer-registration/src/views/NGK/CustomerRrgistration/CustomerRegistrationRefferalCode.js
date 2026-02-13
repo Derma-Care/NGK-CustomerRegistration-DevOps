@@ -346,7 +346,7 @@ useEffect(() => {
       e.address = 'Please enter complete address'
     }
 
-    if (!/^\d{12}$/.test(form.Aadhar)) e.Aadhar = 'Enter a valid 12-digit Aadhaar number'
+    // if (!/^\d{12}$/.test(form.Aadhar)) e.Aadhar = 'Enter a valid 12-digit Aadhaar number'
 
     if (!form.dob) {
       e.dob = 'Date of birth is required'
@@ -428,8 +428,8 @@ useEffect(() => {
       if (!form.skinTone) e.skinTone = 'Please select your skin tone'
     }
 
-    if (!form.aadhaarConsent)
-      e.aadhaarConsent = 'You must accept Aadhaar consent before submitting.'
+    // if (!form.aadhaarConsent)
+    //   e.aadhaarConsent = 'You must accept Aadhaar consent before submitting.'
 
     if (!form.userConsent) e.userConsent = 'You must agree to the User Consent Disclaimer.'
 
@@ -495,7 +495,7 @@ useEffect(() => {
       // registrationCode: form.registraionCode || sessionStorage.getItem('registraionCode'),
       referId: form.referralCode, // ✅ mandatory
       // referBy: form.referBy || null,
-      aadharNumber: form.Aadhar,
+      // aadharNumber: form.Aadhar,
       prescription: form.prescription, // File or text
       // referBy: form.referBy,
       gender: form.gender,
@@ -507,7 +507,7 @@ useEffect(() => {
         form.interestCategory === 'Other' ? form.otherInterestCategory : form.interestCategory,
       skinTone: form.skinTone === 'other' ? form.skinToneOther : form.skinTone,
       photo: form.samplePhoto,
-      aadhaarConsent: form.aadhaarConsent,
+      // aadhaarConsent: form.aadhaarConsent,
       userConsent: form.userConsent,
       privacyConsent: form.privacyConsent,
       address: form.address,
@@ -524,19 +524,20 @@ useEffect(() => {
       console.log(result)
       const newErrors = { ...errors }
       if (!result.success) {
-        const backendMessage = result.message || 'Something went wrong'
-        if (backendMessage.toLowerCase().includes('mobile')) {
-          newErrors.mobile = backendMessage
-        } else if (backendMessage.toLowerCase().includes('aadhaar')) {
-          newErrors.Aadhar = backendMessage
-        }
-        setErrors(newErrors)
-        scrollToFirstError(newErrors)
-        showCustomToast(`${result.message}` || '❌ Registration failed!', 'error')
-        return
-      } else {
-        showCustomToast(`${result.message}` || `Some filed not filled`, 'success')
-      }
+  const backendErrors = result.data;
+
+  if (backendErrors && typeof backendErrors === "object") {
+    // 🔥 Convert object values into single string
+    const errorMessages = Object.values(backendErrors).join("\n");
+
+    showCustomToast(errorMessages, "error");
+  } else {
+    showCustomToast(result.message || "❌ Registration failed!", "error");
+  }
+
+  return;
+}
+
       setSubmitted(true)
       const data = result.data
       console.log('Customer Registered ID:', data)
@@ -564,7 +565,7 @@ useEffect(() => {
 
     if (!form.userConsent) missing.push('User Consent Disclaimer')
     if (!form.privacyConsent) missing.push('Privacy Policy')
-    if (!form.aadhaarConsent) missing.push('Aadhaar Consent')
+    // if (!form.aadhaarConsent) missing.push('Aadhaar Consent')
 
     if (missing.length > 0) {
       setServiceStatusError(`Please agree to: ${missing.join(', ')}.`)
@@ -916,9 +917,7 @@ useEffect(() => {
                   </CCol>
 
                   {/* {errors.city && <p style={{ color: '#ff2e85' }}>{errors.city}</p>} */}
-                  <CCol md={6}>
-                    <RefferalCodeAddress form={form} setForm={setForm} error={errors.address} />
-                  </CCol>
+                
 
                   <CCol md={6}>
                     <CFormLabel
@@ -927,6 +926,7 @@ useEffect(() => {
                     >
                       Referral Code (Optional)  
                     </CFormLabel>
+                    
 
                     <CFormInput
                       placeholder="Enter referral code"
@@ -941,6 +941,9 @@ useEffect(() => {
                     {/* {errors.referralCode && (
                       <p style={{ color: 'red', fontSize: 13 }}>{errors.referralCode}</p>
                     )} */}
+                  </CCol>
+                    <CCol md={12}>
+                    <RefferalCodeAddress form={form} setForm={setForm} error={errors.address} />
                   </CCol>
                   {/* <CCol md={6}>
                     <CFormLabel
@@ -964,7 +967,7 @@ useEffect(() => {
                       <p style={{ color: 'red', fontSize: 13 }}>{errors.referBy}</p>
                     )}
                   </CCol> */}
-                  <CCol md={6}>
+                  {/* <CCol md={6}>
                     <CFormLabel
                       className="label-gradient "
                       style={{ color: NGK_COLORS.primarySoft }}
@@ -990,13 +993,13 @@ useEffect(() => {
                               'error',
                             )
 
-                            // highlight consent section
+                           
                             setHighlightAadhaarConsent(true)
 
-                            // remove highlight after 2 seconds
+                            
                             setTimeout(() => setHighlightAadhaarConsent(false), 2000)
 
-                            // move user to consent section
+                            
                             inputRefs.aadhaarConsent?.current?.scrollIntoView({
                               behavior: 'smooth',
                               block: 'center',
@@ -1043,8 +1046,8 @@ useEffect(() => {
                       </p>
                     )}
 
-                    {/* Error */}
-                  </CCol>
+                   
+                  </CCol> */}
 
                   <CCol md={12} style={{ marginTop: '20px' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
@@ -1150,7 +1153,7 @@ useEffect(() => {
                     </p>
                   )}
 
-                  <CCol md={12}>
+                  {/* <CCol md={12}>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: '8px' }}>
                         <input
@@ -1170,9 +1173,9 @@ useEffect(() => {
                           }}
                           onChange={(e) => {
                             setForm((prev) => ({ ...prev, aadhaarConsent: e.target.checked }))
-                            // setForm({ ...form, aadhaarConsent: e.target.checked })
+                           
 
-                            // remove error when checked
+                    
                             if (e.target.checked) {
                               setErrors((prev) => ({ ...prev, aadhaarConsent: '' }))
                               setServiceStatusError('')
@@ -1198,14 +1201,14 @@ useEffect(() => {
                         </div>
                       </div>
 
-                      {/* ERROR MESSAGE */}
+                      
                       {errors.aadhaarConsent && (
                         <p style={{ color: 'red', fontSize: '12px', marginTop: '4px' }}>
                           {errors.aadhaarConsent}
                         </p>
                       )}
                     </div>
-                  </CCol>
+                  </CCol> */}
                   {serviceStatusError && (
                     <p style={{ color: 'red', marginTop: '5px', fontSize: '14px' }}>
                       {serviceStatusError}
