@@ -103,7 +103,7 @@ export default function RefferalCodeAddress({ form, setForm,error }) {
     }}
   >
     {/* 📍 Icon */}
-    <span style={{ fontSize: '16px' }}>📍</span>
+    <span style={{ fontSize: '16px' }}>📍 Use location</span>
 
     {/* Loader */}
     {loadingLocation && (
@@ -112,7 +112,7 @@ export default function RefferalCodeAddress({ form, setForm,error }) {
 
     {/* ✅ Text for MOBILE + SM */}
     <span className="d-inline d-md-none">
-      {loadingLocation ? 'Fetching…' : 'Use location'}
+      {loadingLocation ? 'Fetching…' : ''}
     </span>
   </CButton>
 </CCol>

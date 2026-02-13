@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import React, { useEffect, useState } from 'react'
 import { Wheel } from 'react-custom-roulette'
 import './SpinWheel.css'
@@ -6,12 +7,14 @@ import { sendSpinReward } from '../APIs/SendSpinReward'
 import { showCustomToast } from '../../../Utils/Toaster'
 import { NGK_COLORS } from '../../../Constant/Themes'
 import DermaCareLogo from '../../../assets/images/logoP.png'
+import { useNavigate } from 'react-router-dom'
 export default function SpinWheel({ onResult, userData, setUserData }) {
   const [mustSpin, setMustSpin] = useState(false)
   const [prizeNumber, setPrizeNumber] = useState(0)
   const [slices, setSlices] = useState([])
   const [winningSliceId, setWinningSliceId] = useState(null)
   const [loading, setLoading] = useState(true)
+  const navigate = useNavigate()
 
   const wheelSize = window.innerWidth < 350 ? 180 : window.innerWidth < 420 ? 220 : 320
 
@@ -21,29 +24,44 @@ export default function SpinWheel({ onResult, userData, setUserData }) {
   }, [])
 
   const loadSlices = async () => {
-    const response = await getWheelSlices(userData.mobile)
+    setLoading(true)
 
-    if (response.success) {
-      const allSlices = response.data.allSlices
-      const winningId = response.data.winningSliceId
+    try {
+      const response = await getWheelSlices(userData.mobile)
 
-      const formatted = allSlices.map((item) => ({
-        id: item.id,
-        option: item.option,
-        src: item.src ? `data:image/png;base64,${item.src}` : null,
-      }))
+      if (response.success) {
+        const allSlices = response.data.allSlices
+        const winningId = response.data.winningSliceId
 
-      setSlices(formatted)
-      setWinningSliceId(winningId)
+        const formatted = allSlices.map((item) => ({
+          id: item.id,
+          option: item.option,
+          src: item.src ? `data:image/png;base64,${item.src}` : null,
+        }))
 
-      // If spin already completed → jump to stored result
-      if (userData.spinWheelCompleted && userData.spinRewardId) {
-        const idx = formatted.findIndex((s) => s.id === userData.spinRewardId)
-        if (idx !== -1) setPrizeNumber(idx)
+        setSlices(formatted)
+        setWinningSliceId(winningId)
+
+        setLoading(false) // ✅ STOP LOADER FIRST
+        // showCustomToast(response.message || 'Wheel loaded!', 'success')
+      } else {
+        setLoading(false) // ✅ STOP LOADER FIRST
+
+        showCustomToast(response.message || 'Something went wrong!', 'error')
+
+        setTimeout(() => {
+          navigate(-1)
+        }, 1500)
       }
-    }
+    } catch (error) {
+      setLoading(false) // ✅ VERY IMPORTANT
 
-    setLoading(false)
+      showCustomToast(error?.response?.data?.message || 'Server error occurred', 'error')
+
+      setTimeout(() => {
+        navigate(-1)
+      }, 1500)
+    }
   }
 
   // Wheel display formatting
