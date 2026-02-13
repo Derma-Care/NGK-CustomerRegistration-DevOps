@@ -48,7 +48,7 @@ public class Customer {
     private String photo;
 
     // Consent fields
-    private Boolean aadhaarConsent = false;
+//    private Boolean aadhaarConsent = false;
     private Boolean userConsent = false;
     private Boolean privacyConsent = false;
 
