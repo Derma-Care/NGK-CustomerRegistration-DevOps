@@ -330,8 +330,65 @@ public class CustomerService {
 
 
  // ==================== HELPER: DETERMINE WINNING SLICE ====================
+//    private WheelSliceDto determineWinningSlice(Customer customer, List<WheelSliceDto> allSlices) {
+//        if (allSlices == null || allSlices.isEmpty()) return null;
+//
+//        // If already spun, return stored reward
+//        if (customer.isSpinWheelCompleted() && customer.getSpinRewardId() != null) {
+//            return allSlices.stream()
+//                    .filter(s -> s.getId().equals(customer.getSpinRewardId()))
+//                    .findFirst()
+//                    .orElse(allSlices.get(0));
+//        }
+//
+//        // First-time spin logic
+//        if (customer.getServiceStatus() == 1) {
+//            // YES USERS
+//            if ("male".equalsIgnoreCase(customer.getGender())) {
+//                // Male YES users → only slices 10,11,12 (indexes 9,10,11)
+//                int[] allowedIndexes = {10, 11};
+//                int randomIndex = allowedIndexes[(int) (Math.random() * allowedIndexes.length)];
+//                return allSlices.get(randomIndex);
+//            } else {
+//                // Female YES users → rank-based logic
+//                Integer rank = customer.getRegistrationRank();
+//                if (rank == null) rank = Integer.MAX_VALUE;
+//
+//                if (rank <= 500) {
+//                    int randomIndex = (int) (Math.random() * 6); // 0–5
+//                    return allSlices.get(randomIndex);
+//                } else {
+//                    int min = 6;
+//                    int max = allSlices.size(); // exclusive
+//                    int randomIndex = min + (int) (Math.random() * (max - min)); // 6–11
+//                    return allSlices.get(randomIndex);
+//                }
+//            }
+//        } else if (customer.getServiceStatus() == 2) {
+//            // INTERESTED USERS
+//            if ("male".equalsIgnoreCase(customer.getGender())) {
+//                // Male INTERESTED users → only slices 4,5,6 (indexes 3,4,5) and 10,11,12 (indexes 9,10,11)
+//                int[] allowedIndexes = {4, 5, 10, 11};
+//                int randomIndex = allowedIndexes[(int) (Math.random() * allowedIndexes.length)];
+//                return allSlices.get(randomIndex);
+//            } else {
+//                // Female INTERESTED users → random between all slices
+//                int randomIndex = (int) (Math.random() * allSlices.size());
+//                return allSlices.get(randomIndex);
+//            }
+//        } else {
+//            // Fallback: random between all slices
+//            int randomIndex = (int) (Math.random() * allSlices.size());
+//            return allSlices.get(randomIndex);
+//        }
+//    }
+
+ // ==================== HELPER: DETERMINE WINNING SLICE ====================
     private WheelSliceDto determineWinningSlice(Customer customer, List<WheelSliceDto> allSlices) {
-        if (allSlices == null || allSlices.isEmpty()) return null;
+
+        if (allSlices == null || allSlices.isEmpty()) {
+            throw new IllegalStateException("Wheel slices not configured");
+        }
 
         // If already spun, return stored reward
         if (customer.isSpinWheelCompleted() && customer.getSpinRewardId() != null) {
@@ -341,49 +398,46 @@ public class CustomerService {
                     .orElse(allSlices.get(0));
         }
 
-        // First-time spin logic
-        if (customer.getServiceStatus() == 1) {
-            // YES USERS
-            if ("male".equalsIgnoreCase(customer.getGender())) {
-                // Male YES users → only slices 10,11,12 (indexes 9,10,11)
-                int[] allowedIndexes = {10, 11};
-                int randomIndex = allowedIndexes[(int) (Math.random() * allowedIndexes.length)];
-                return allSlices.get(randomIndex);
-            } else {
-                // Female YES users → rank-based logic
-                Integer rank = customer.getRegistrationRank();
-                if (rank == null) rank = Integer.MAX_VALUE;
+        Integer regNo = customer.getRegistrationRank(); // Must be 1–240
 
-                if (rank <= 500) {
-                    int randomIndex = (int) (Math.random() * 6); // 0–5
-                    return allSlices.get(randomIndex);
-                } else {
-                    int min = 6;
-                    int max = allSlices.size(); // exclusive
-                    int randomIndex = min + (int) (Math.random() * (max - min)); // 6–11
-                    return allSlices.get(randomIndex);
-                }
-            }
-        } else if (customer.getServiceStatus() == 2) {
-            // INTERESTED USERS
-            if ("male".equalsIgnoreCase(customer.getGender())) {
-                // Male INTERESTED users → only slices 4,5,6 (indexes 3,4,5) and 10,11,12 (indexes 9,10,11)
-                int[] allowedIndexes = {4, 5, 10, 11};
-                int randomIndex = allowedIndexes[(int) (Math.random() * allowedIndexes.length)];
-                return allSlices.get(randomIndex);
-            } else {
-                // Female INTERESTED users → random between all slices
-                int randomIndex = (int) (Math.random() * allSlices.size());
-                return allSlices.get(randomIndex);
-            }
-        } else {
-            // Fallback: random between all slices
-            int randomIndex = (int) (Math.random() * allSlices.size());
-            return allSlices.get(randomIndex);
+        if (regNo == null || regNo < 1 || regNo > 240) {
+            throw new IllegalArgumentException("Registration number must be between 1 and 240");
         }
+
+        boolean isMale = "male".equalsIgnoreCase(customer.getGender());
+        int index;
+
+        // ================= YES CATEGORY (1–120) =================
+        if (regNo <= 120) {
+
+            index = (regNo - 1) / 10;
+
+            // 1–80 → Female only
+            if (regNo <= 80 && isMale) {
+                throw new IllegalArgumentException(
+                        "Male users are not allowed in registration range 1–80 (YES category)");
+            }
+        }
+
+        // ================= NO CATEGORY (121–240) =================
+        else {
+
+            index = (regNo - 121) / 10;
+
+            // 121–200 → Female only
+            if (regNo <= 200 && isMale) {
+                throw new IllegalArgumentException(
+                        "Male users are not allowed in registration range 121–200 (NO category)");
+            }
+        }
+
+        // Safety check
+        if (index >= allSlices.size()) {
+            throw new IllegalStateException("Wheel slice index out of range");
+        }
+
+        return allSlices.get(index);
     }
-
-
 
  // ==================== CRUD ====================
     public ApiResponse<List<Customer>> getAllCustomers() {
