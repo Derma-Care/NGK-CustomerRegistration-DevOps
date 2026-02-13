@@ -384,6 +384,63 @@ public class CustomerService {
 //    }
 
  // ==================== HELPER: DETERMINE WINNING SLICE ====================
+//    private WheelSliceDto determineWinningSlice(Customer customer, List<WheelSliceDto> allSlices) {
+//
+//        if (allSlices == null || allSlices.isEmpty()) {
+//            throw new IllegalStateException("Wheel slices not configured");
+//        }
+//
+//        // If already spun, return stored reward
+//        if (customer.isSpinWheelCompleted() && customer.getSpinRewardId() != null) {
+//            return allSlices.stream()
+//                    .filter(s -> s.getId().equals(customer.getSpinRewardId()))
+//                    .findFirst()
+//                    .orElse(allSlices.get(0));
+//        }
+//
+//        Integer regNo = customer.getRegistrationRank(); // Must be 1–240
+//
+//        if (regNo == null || regNo < 1 || regNo > 240) {
+//            throw new IllegalArgumentException("Registration number must be between 1 and 240");
+//        }
+//
+//        boolean isMale = "male".equalsIgnoreCase(customer.getGender());
+//        int index;
+//
+//        // ================= YES CATEGORY (1–120) =================
+//        if (regNo <= 120) {
+//
+//            index = (regNo - 1) / 10;
+//
+//            // 1–80 → Female only
+//            if (regNo <= 80 && isMale) {
+//                throw new IllegalArgumentException(
+//                        "Male users are not allowed in registration range 1–80 (YES category)");
+//            }
+//        }
+//
+//        // ================= NO CATEGORY (121–240) =================
+//        else {
+//
+//            index = (regNo - 121) / 10;
+//
+//            // 121–200 → Female only
+//            if (regNo <= 200 && isMale) {
+//                throw new IllegalArgumentException(
+//                        "Male users are not allowed in registration range 121–200 (NO category)");
+//            }
+//        }
+//
+//        // Safety check
+//        if (index >= allSlices.size()) {
+//            throw new IllegalStateException("Wheel slice index out of range");
+//        }
+//
+//        return allSlices.get(index);
+//    }
+
+    
+ // ==================== HELPER: DETERMINE WINNING SLICE ====================
     private WheelSliceDto determineWinningSlice(Customer customer, List<WheelSliceDto> allSlices) {
 
         if (allSlices == null || allSlices.isEmpty()) {
@@ -398,7 +455,7 @@ public class CustomerService {
                     .orElse(allSlices.get(0));
         }
 
-        Integer regNo = customer.getRegistrationRank(); // Must be 1–240
+        Integer regNo = customer.getRegistrationRank(); // 1–240
 
         if (regNo == null || regNo < 1 || regNo > 240) {
             throw new IllegalArgumentException("Registration number must be between 1 and 240");
@@ -410,24 +467,47 @@ public class CustomerService {
         // ================= YES CATEGORY (1–120) =================
         if (regNo <= 120) {
 
-            index = (regNo - 1) / 10;
-
-            // 1–80 → Female only
+            // 1–80 Female only
             if (regNo <= 80 && isMale) {
                 throw new IllegalArgumentException(
                         "Male users are not allowed in registration range 1–80 (YES category)");
             }
+
+            if (regNo <= 10) index = 0;
+            else if (regNo <= 20) index = 1;
+            else if (regNo <= 30) index = 2;
+            else if (regNo <= 40) index = 3;
+            else if (regNo <= 50) index = 4;
+            else if (regNo <= 60) index = 5;
+            else if (regNo <= 70) {
+                int[] allowed = {6, 8};
+                index = allowed[(int) (Math.random() * allowed.length)];
+            }
+            else if (regNo <= 80) {
+                int[] allowed = {7, 9};
+                index = allowed[(int) (Math.random() * allowed.length)];
+            }
+            else if (regNo <= 100) index = 10;
+            else index = 11;
         }
 
         // ================= NO CATEGORY (121–240) =================
         else {
 
-            index = (regNo - 121) / 10;
+            int group = (regNo - 121) / 10; // 0–11
+
+            index = group;
 
             // 121–200 → Female only
             if (regNo <= 200 && isMale) {
                 throw new IllegalArgumentException(
-                        "Male users are not allowed in registration range 121–200 (NO category)");
+                        "Male users not allowed in 121–200 (NO category)");
+            }
+
+            // 201–240 → Male only
+            if (regNo >= 201 && !isMale) {
+                throw new IllegalArgumentException(
+                        "Female users not allowed in 201–240 (NO category)");
             }
         }
 
@@ -438,7 +518,7 @@ public class CustomerService {
 
         return allSlices.get(index);
     }
-
+    
  // ==================== CRUD ====================
 //    public ApiResponse<List<Customer>> getAllCustomers() {
 //        List<Customer> customers = customerRepository.findAll();
