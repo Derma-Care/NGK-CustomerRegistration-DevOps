@@ -13,12 +13,12 @@ public interface CustomerRepository extends MongoRepository<Customer, String> {
   
 
     // Pre-hash query for duplicate Aadhaar
-    List<Customer> findByAadharPreHash(String aadharPreHash);
+//    List<Customer> findByAadharPreHash(String aadharPreHash);
 
     Customer findByRegistrationCode(String code);
 
     // ✅ New method: find all customers with preHash in the given list
-    List<Customer> findByAadharPreHashIn(List<String> preHashes);
+//    List<Customer> findByAadharPreHashIn(List<String> preHashes);
 
  // Add this method to your existing CustomerRepository interface
 
