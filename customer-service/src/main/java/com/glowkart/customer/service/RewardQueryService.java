@@ -57,7 +57,7 @@ public class RewardQueryService {
                 .balanceValue(balance * coinValue)
                 .levels(Map.of(
                         "BASIC", 0,
-                        "SILVER", 200,
+                        "SILVER", 2500,
                         "GOLD", 5000,
                         "PLATINUM", 7500
                 ))
@@ -68,7 +68,7 @@ public class RewardQueryService {
     private String determineMembership(int totalCredits) {
         if (totalCredits >= 7500) return "PLATINUM";
         if (totalCredits >= 5000) return "GOLD";
-        if (totalCredits >= 200) return "SILVER";
+        if (totalCredits >= 2500) return "SILVER";
         return "BASIC";
     }
 
