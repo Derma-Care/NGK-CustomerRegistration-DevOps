@@ -8,7 +8,7 @@
 // export let wifiUrl = 'https://glowkartapi.ashokfruit.shop'
 
 // Registration Dev
-export let wifiUrl = 'http://api.ngkderma.com'
+export let wifiUrl = 'https://api.ngkderma.com'
 //-----------------------------
 // Production
 // export let wifiUrl = 'https://api.aesthetech.life'
