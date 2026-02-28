@@ -318,12 +318,9 @@ useEffect(() => {
     }
 
     // 🔴 Referral Code (MANDATORY)
-    // if (!form.referralCode || !form.referralCode.trim()) {
-    //   e.referralCode = 'Referral code is required'
-    // } else
-    //    if (!/^[A-Z0-9]{4,10}$/.test(form.referralCode)) {
-    //   e.referralCode = 'Invalid referral code'
-    // }
+    if (!form.referralCode || !form.referralCode.trim()) {
+      e.referralCode = 'Referral code is required'
+    } 
 
     // // 🟡 Refer By (OPTIONAL)
     // if (form.referBy && !isValidAadhaarName(form.referBy)) {
@@ -924,7 +921,7 @@ useEffect(() => {
                       className="label-gradient"
                       style={{ color: NGK_COLORS.primarySoft }}
                     >
-                      Referral Code (Optional)  
+                      Referral Code 
                     </CFormLabel>
                     
 
@@ -934,13 +931,13 @@ useEffect(() => {
                       onChange={(e) => {
                         const value = e.target.value.toUpperCase().trim()
                         setForm((prev) => ({ ...prev, referralCode: value }))
-                        // setErrors((prev) => ({ ...prev, referralCode: null }))
+                        setErrors((prev) => ({ ...prev, referralCode: null }))
                       }}
                     />
 
-                    {/* {errors.referralCode && (
+                    {errors.referralCode && (
                       <p style={{ color: 'red', fontSize: 13 }}>{errors.referralCode}</p>
-                    )} */}
+                    )}
                   </CCol>
                     <CCol md={12}>
                     <RefferalCodeAddress form={form} setForm={setForm} error={errors.address} />
