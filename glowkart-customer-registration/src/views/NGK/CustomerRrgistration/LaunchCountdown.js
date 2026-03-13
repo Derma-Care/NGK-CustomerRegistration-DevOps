@@ -3,7 +3,7 @@ import { NGK_COLORS } from '../../../Constant/Themes'
 
 // eslint-disable-next-line react/prop-types
 export default function LaunchCountdown({ onComplete }) {
-  const targetDate = new Date('2026-03-08T00:00:00').getTime()
+  const targetDate = new Date('2026-06-08T00:00:00').getTime()
   const [timeLeft, setTimeLeft] = useState(null)
   const [loading, setLoading] = useState(true)
 
